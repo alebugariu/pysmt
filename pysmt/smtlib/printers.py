@@ -27,11 +27,12 @@ from pysmt.utils import quote
 
 class SmtPrinter(TreeWalker):
 
-    def __init__(self, stream):
+    def __init__(self, stream, annotations=None):
         TreeWalker.__init__(self)
         self.stream = stream
         self.write = self.stream.write
         self.mgr = get_env().formula_manager
+        self.annotations = annotations
 
     def printer(self, f):
         self.walk(f)

@@ -230,7 +230,7 @@ class SmtLibScript(object):
         if daggify:
             printer = SmtDagPrinter(outstream)
         else:
-            printer = SmtPrinter(outstream)
+            printer = SmtPrinter(outstream, self.annotations)
 
         for cmd in self.commands:
             cmd.serialize(printer=printer)
