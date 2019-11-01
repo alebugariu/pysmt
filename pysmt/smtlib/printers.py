@@ -143,7 +143,19 @@ class SmtPrinter(TreeWalker):
             self.write(" %s)" % s.symbol_type().as_smtlib(False))
 
         self.write(") ")
-        yield formula.arg(0)
+        body = formula.arg(0)
+
+        annotations_for_body = self.annotations[body]
+        if 'pattern' in annotations_for_body.keys():
+            patterns = annotations_for_body['pattern']
+            self.write("(! ")
+            yield body
+            self.write(" :pattern (")
+            for pattern in patterns:
+                self.write(pattern + " ")
+            self.write("))")
+        else:
+            yield body
         self.write(")")
 
     def walk_bv_extract(self, formula):
