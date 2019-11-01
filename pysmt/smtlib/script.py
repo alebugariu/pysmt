@@ -74,7 +74,15 @@ class SmtLibCommand(namedtuple('SmtLibCommand', ['name', 'args'])):
 
         elif self.name == smtcmd.ASSERT:
             outstream.write("(%s " % self.name)
-            printer.printer(self.args[0])
+            assertion = self.args[0]
+            annotations_for_assertion = printer.annotations[assertion]
+            if annotations_for_assertion is not None and'named' in annotations_for_assertion.keys():
+                (assertion_name, ) = annotations_for_assertion['named']
+                outstream.write("(! ")
+                printer.printer(assertion)
+                outstream.write(" :named " + assertion_name + ")")
+            else:
+                printer.printer(assertion)
             outstream.write(")")
 
         elif self.name == smtcmd.GET_VALUE:
