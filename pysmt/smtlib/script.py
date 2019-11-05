@@ -102,7 +102,7 @@ class SmtLibCommand(namedtuple('SmtLibCommand', ['name', 'args'])):
 
         elif self.name in [smtcmd.DECLARE_FUN, smtcmd.DECLARE_CONST]:
             symbol = self.args[0]
-            type_str = symbol.symbol_type().as_smtlib()
+            type_str = symbol.symbol_type().as_smtlib(funstyle=(self.name==smtcmd.DECLARE_FUN))
             outstream.write("(%s %s %s)" % (self.name,
                                             quote(symbol.symbol_name()),
                                             type_str))
