@@ -17,22 +17,22 @@
 #
 import functools
 import itertools
-
+from collections import deque
 from warnings import warn
+
 from six import iteritems, PY2
 from six.moves import xrange
-from collections import deque
 
 import pysmt.smtlib.commands as smtcmd
-from pysmt.environment import get_env
-from pysmt.logics import get_logic_by_name, UndefinedLogicError
-from pysmt.exceptions import UnknownSmtLibCommandError, PysmtSyntaxError
-from pysmt.exceptions import PysmtTypeError
-from pysmt.smtlib.script import SmtLibCommand, SmtLibScript
-from pysmt.smtlib.annotations import Annotations
-from pysmt.utils import interactive_char_iterator
 from pysmt.constants import Fraction
+from pysmt.environment import get_env
+from pysmt.exceptions import PysmtTypeError
+from pysmt.exceptions import UnknownSmtLibCommandError, PysmtSyntaxError
+from pysmt.logics import get_logic_by_name, UndefinedLogicError
+from pysmt.smtlib.annotations import Annotations
+from pysmt.smtlib.script import SmtLibCommand, SmtLibScript
 from pysmt.typing import _TypeDecl, PartialType
+from pysmt.utils import interactive_char_iterator
 
 
 def open_(fname):
@@ -1220,7 +1220,11 @@ class SmtLibParser(object):
         # Finish Parsing
         self.consume_closing(tokens, current)
         self.cache.define(var, formal, ebody)
-        return SmtLibCommand(current, [var, formal, rtype, ebody])
+
+        # ATG: not sure if this change affects caching:
+        #return SmtLibCommand(current, [var, formal, rtype, ebody])
+        v_node = self._get_var(var, rtype)
+        return SmtLibCommand(current, [v_node, formal, rtype, ebody])
 
     def _cmd_declare_sort(self, current, tokens):
         """(declare-sort <symbol> <numeral>)"""
