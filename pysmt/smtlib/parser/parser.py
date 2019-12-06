@@ -33,6 +33,7 @@ from pysmt.smtlib.annotations import Annotations
 from pysmt.smtlib.script import SmtLibCommand, SmtLibScript
 from pysmt.typing import _TypeDecl, PartialType
 from pysmt.utils import interactive_char_iterator
+from src.utils.string import create_substituted_string
 
 
 def open_(fname):
@@ -323,12 +324,15 @@ class SmtLibParser(object):
     for example with a SMT-Lib2-compliant solver
     """
 
+    TOKEN_ALPHABET = """%@#abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_!'.-"""
+
     def __init__(self, environment=None, interactive=False):
         self.env = get_env() if environment is None else environment
         self.interactive = interactive
 
         # Placeholders for fields filled by self._reset
         self.cache = None
+        self.quant_var_renaming_map = dict()
         self.logic = None
         self._reset()
 
@@ -625,8 +629,11 @@ class SmtLibParser(object):
         try:
             return self._get_var(name, type_name)
         except PysmtTypeError:
-            return self.env.formula_manager.FreshSymbol(typename=type_name,
-                                                        template=name+"%d")
+
+            fresh_var = self.env.formula_manager.FreshSymbol(typename=type_name,
+                                                             template=name+"%d")
+            self.quant_var_renaming_map[fresh_var] = name
+            return fresh_var
 
     def atom(self, token, mgr):
         """
@@ -755,6 +762,7 @@ class SmtLibParser(object):
 
         stack[-1].append(self._exit_quantifier)
         stack[-1].append(quant)
+
         stack[-1].append(vrs)
 
     def _enter_annotation(self, stack, tokens, key):
@@ -826,6 +834,42 @@ class SmtLibParser(object):
 
                     try:
                         res = fun(*lst)
+                        if res.is_quantifier():
+                            q_body = res.arg(0)
+                            annotations_for_quantifier = self.cache.annotations[q_body]
+
+                            def get_annotation_by_name(all_annotations, a_name: str):
+                                return {key: value for key, value in all_annotations.items() if a_name == key}
+
+                            def rewrite_annotations(annotations, a_name: str):
+                                qvars = res.quantifier_vars()
+                                rewrite_list = dict()
+                                if a_name not in annotations:
+                                    return dict()
+                                for pattern in annotations[a_name]:
+                                    for qvar in qvars:
+                                        if qvar not in self.quant_var_renaming_map:
+                                            continue
+
+                                        old_name: str = self.quant_var_renaming_map[qvar]
+                                        new_name: str = qvar.symbol_name()
+                                        new_pat: str = create_substituted_string(self.TOKEN_ALPHABET, old_name,
+                                                                                 new_name, pattern)
+                                        if a_name in rewrite_list:
+                                            rewrite_list[a_name].add(new_pat)
+                                        else:
+                                            rewrite_list[a_name] = {new_pat}
+
+                                return rewrite_list
+
+                            if annotations_for_quantifier is not None:
+                                no_patterns_for_quantifier = get_annotation_by_name(annotations_for_quantifier, 'no-pattern')
+                                patterns_for_quantifier = get_annotation_by_name(annotations_for_quantifier, 'pattern')
+                                no_pat_rewrite_list = rewrite_annotations(no_patterns_for_quantifier, 'no-pattern')
+                                pat_rewrite_list = rewrite_annotations(patterns_for_quantifier, 'pattern')
+                                self.cache.annotations[q_body].update(no_pat_rewrite_list)
+                                self.cache.annotations[q_body].update(pat_rewrite_list)
+
                     except TypeError as err:
                         if not callable(fun):
                             raise NotImplementedError("Unknown function '%s'" % fun)
@@ -1206,12 +1250,14 @@ class SmtLibParser(object):
         namedparams = self.parse_named_params(tokens, current)
         rtype = self.parse_type(tokens, current)
         bindings = []
+        params = []
         for (x,t) in namedparams:
             v = self.env.formula_manager.FreshSymbol(typename=t,
-                                                        template="__"+x+"%d")
+                                                     template="__"+x+"%d")
             self.cache.bind(x, v)
             formal.append(v) #remember the variable
             bindings.append(x) #remember the name
+            params.append(t) # remember the types
         # Parse expression using also parameters
         ebody = self.get_expression(tokens)
         #Discard parameters
@@ -1223,7 +1269,8 @@ class SmtLibParser(object):
 
         # ATG: not sure if this change affects caching:
         #return SmtLibCommand(current, [var, formal, rtype, ebody])
-        v_node = self._get_var(var, rtype)
+        typename = self.env.type_manager.FunctionType(rtype, params)
+        v_node = self._get_var(var, typename)
         return SmtLibCommand(current, [v_node, formal, rtype, ebody])
 
     def _cmd_declare_sort(self, current, tokens):
