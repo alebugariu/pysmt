@@ -80,11 +80,12 @@ class FNode(object):
     The node_id is an integer uniquely identifying the node within the
     FormulaManager it belongs.
     """
-    __slots__ = ["_content", "_node_id"]
+    __slots__ = ["_content", "_node_id", "_cached_representation"]
 
     def __init__(self, content, node_id):
         self._content = content
         self._node_id = node_id
+        self._cached_representation = None
         return
 
     # __eq__ is left as default while __hash__ uses the node id. This
@@ -525,7 +526,9 @@ class FNode(object):
         formula that will be printed.
         See :py:class:`HRSerializer`
         """
-        return _env().serializer.serialize(self, threshold=threshold)
+        if self._cached_representation is None:
+            self._cached_representation = _env().serializer.serialize(self, threshold=threshold)
+        return self._cached_representation
 
     def to_smtlib(self, daggify=True):
         """Returns a Smt-Lib string representation of the formula.
@@ -670,6 +673,11 @@ class FNode(object):
         """Return the Function name."""
         assert self.is_function_application()
         return self._content.payload
+
+    def get_function_name(self) -> str:
+        """Return the Function name, as a str. function_name returns an FNode"""
+        assert self.is_function_application()
+        return self._content.payload._content.payload[0]
 
     def quantifier_vars(self):
         """Return the list of quantified variables."""
