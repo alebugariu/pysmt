@@ -80,12 +80,18 @@ class FNode(object):
     The node_id is an integer uniquely identifying the node within the
     FormulaManager it belongs.
     """
-    __slots__ = ["_content", "_node_id", "_cached_representation"]
+    __slots__ = ["_content", "_node_id",
+                 "_cached_representation", "_is_fun_application", "_is_symbol", "_function_name"]
 
     def __init__(self, content, node_id):
         self._content = content
         self._node_id = node_id
         self._cached_representation = None
+        self._is_fun_application = (self.node_type() == FUNCTION)
+        self._is_symbol = (self.node_type() == SYMBOL)
+        self._function_name = None
+        if self._is_fun_application:
+            self._function_name = self._content.payload._content.payload[0]
         return
 
     # __eq__ is left as default while __hash__ uses the node id. This
@@ -234,7 +240,7 @@ class FNode(object):
         if type_:
             return self.node_type() == SYMBOL and \
                    self.symbol_type() == type_
-        return self.node_type() == SYMBOL
+        return self._is_symbol
 
     def is_literal(self):
         """Test whether the formula is a literal.
@@ -544,26 +550,26 @@ class FNode(object):
 
     def is_function_application(self):
         """Test whether the node is a Function application."""
-        return self.node_type() == FUNCTION
+        return self._is_fun_application
 
     def is_term(self):
         """Test whether the node is a term.
 
         All nodes are terms, except for function definitions.
         """
-        return not (self.is_symbol() and self.symbol_type().is_function_type())
+        return not (self._is_symbol and self.symbol_type().is_function_type())
 
     def is_str_op(self):
         return self.node_type() in STR_OPERATORS
 
     def symbol_type(self):
         """Return the type of the Symbol."""
-        assert self.is_symbol()
+        assert self._is_symbol
         return self._content.payload[1]
 
     def symbol_name(self):
         """Return the name of the Symbol."""
-        assert self.is_symbol()
+        assert self._is_symbol
         return self._content.payload[0]
 
     def constant_value(self):
@@ -671,13 +677,13 @@ class FNode(object):
 
     def function_name(self):
         """Return the Function name."""
-        assert self.is_function_application()
+        assert self._is_fun_application
         return self._content.payload
 
     def get_function_name(self) -> str:
         """Return the Function name, as a str. function_name returns an FNode"""
-        assert self.is_function_application()
-        return self._content.payload._content.payload[0]
+        assert self._is_fun_application
+        return self._function_name
 
     def quantifier_vars(self):
         """Return the list of quantified variables."""
