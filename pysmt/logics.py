@@ -590,7 +590,8 @@ UFNIA = Logic(name="UFNIA",
               description=\
 """Non-linear integer arithmetic with uninterpreted sort and function
 symbols.""",
-              integer_difference=True,
+              #integer_difference=True,
+              integer_arithmetic=True,
               linear=False,
               uninterpreted=True)
 
