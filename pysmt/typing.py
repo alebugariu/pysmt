@@ -148,6 +148,14 @@ class _IntType(PySMTType):
     def is_int_type(self):
         return True
 
+class _RoundingModeType(PySMTType):
+    def __init__(self):
+        decl = _TypeDecl("RoundingMode", 0)
+        PySMTType.__init__(self, decl=decl, args=None)
+
+    def is_roundingmode_type(self):
+        return True
+
 class _RealType(PySMTType):
     def __init__(self):
         decl = _TypeDecl("Real", 0)
@@ -381,6 +389,7 @@ class PartialType(object):
 BOOL = _BoolType()
 REAL = _RealType()
 INT =  _IntType()
+ROUNDING_MODE = _RoundingModeType()
 STRING = _StringType()
 PYSMT_TYPES = frozenset([BOOL, REAL, INT])
 
@@ -400,6 +409,7 @@ class TypeManager(object):
         self._bool = None
         self._real = None
         self._int = None
+        self._rounding_mode = None
         self._string = None
         #
         self.load_global_types()
@@ -413,6 +423,7 @@ class TypeManager(object):
         self._bool = BOOL
         self._real = REAL
         self._int = INT
+        self._rounding_mode = ROUNDING_MODE
         self._string = STRING
 
     def BOOL(self):
@@ -423,6 +434,9 @@ class TypeManager(object):
 
     def INT(self):
         return self._int
+
+    def ROUNDING_MODE(self):
+        return self._rounding_mode
 
     def STRING(self):
         return self._string

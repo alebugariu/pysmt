@@ -1026,6 +1026,8 @@ class SmtLibParser(object):
             res = self.env.type_manager.BOOL()
         elif var == "Int":
             res = self.env.type_manager.INT()
+        elif var == "RoundingMode":
+            res = self.env.type_manager.ROUNDING_MODE()
         elif var == "Real":
             res = self.env.type_manager.REAL()
         elif var == "String":
