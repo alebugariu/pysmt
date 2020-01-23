@@ -22,11 +22,10 @@ reasoning about the type of formulae.
  * The functions assert_*_args are useful for testing the type of
    arguments of a given function.
 """
-import pysmt.walkers as walkers
 import pysmt.operators as op
-
-from pysmt.typing import BOOL, REAL, INT, BVType, ArrayType, STRING
+import pysmt.walkers as walkers
 from pysmt.exceptions import PysmtTypeError
+from pysmt.typing import BOOL, REAL, INT, BVType, ArrayType, STRING
 
 
 class SimpleTypeChecker(walkers.DagWalker):
@@ -79,6 +78,13 @@ class SimpleTypeChecker(walkers.DagWalker):
             rval = self.walk_type_to_type(formula, args, INT, INT)
         return rval
 
+    @walkers.handles(op.MOD)
+    def walk_int_to_int(self, formula, args, **kwargs):
+        # pylint: disable=unused-argument
+        rval = self.walk_type_to_type(formula, args, INT, INT)
+        return rval
+
+    @walkers.handles(op.REALTOINT)
     def walk_realtoint(self, formula, args, **kwargs):
         #pylint: disable=unused-argument
         arg = args[0]

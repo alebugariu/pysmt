@@ -17,8 +17,17 @@
 #
 """FNode are the building blocks of formulae."""
 import collections
+
 import pysmt
 import pysmt.smtlib
+from pysmt.constants import (Fraction, is_python_integer)
+from pysmt.decorators import deprecated, assert_infix_enabled
+from pysmt.exceptions import (PysmtValueError, PysmtModeError,
+                              UnsupportedOperatorError)
+from pysmt.operators import (BOOL_OPERATORS, THEORY_OPERATORS,
+                             BV_OPERATORS, IRA_OPERATORS, ARRAY_OPERATORS,
+                             STR_OPERATORS,
+                             RELATIONS, CONSTANTS)
 from pysmt.operators import (FORALL, EXISTS, AND, OR, NOT, IMPLIES, IFF,
                              SYMBOL, FUNCTION,
                              REAL_CONSTANT, BOOL_CONSTANT, INT_CONSTANT,
@@ -38,27 +47,10 @@ from pysmt.operators import (FORALL, EXISTS, AND, OR, NOT, IMPLIES, IFF,
                              BV_SDIV, BV_SREM,
                              BV_ASHR,
                              STR_CONSTANT,
-                             STR_LENGTH, STR_CONCAT, STR_CONTAINS,
-                             STR_INDEXOF, STR_REPLACE, STR_SUBSTR,
-                             STR_PREFIXOF, STR_SUFFIXOF,
-                             STR_TO_INT, INT_TO_STR,
-                             STR_CHARAT,
                              ARRAY_SELECT, ARRAY_STORE, ARRAY_VALUE,
                              ALGEBRAIC_CONSTANT)
-
-from pysmt.operators import  (BOOL_OPERATORS, THEORY_OPERATORS,
-                              BV_OPERATORS, IRA_OPERATORS, ARRAY_OPERATORS,
-                              STR_OPERATORS,
-                              RELATIONS, CONSTANTS)
-
 from pysmt.typing import BOOL, REAL, INT, BVType, STRING
-from pysmt.decorators import deprecated, assert_infix_enabled
 from pysmt.utils import twos_complement
-from pysmt.constants import (Fraction, is_python_integer,
-                             is_python_rational, is_python_boolean)
-from pysmt.exceptions import (PysmtValueError, PysmtModeError,
-                              UnsupportedOperatorError)
-
 
 FNodeContent = collections.namedtuple("FNodeContent",
                                       ["node_type", "args", "payload"])

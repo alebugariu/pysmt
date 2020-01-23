@@ -18,10 +18,10 @@
 from six.moves import cStringIO
 
 import pysmt.operators as op
+from pysmt.constants import is_pysmt_fraction, is_pysmt_integer
+from pysmt.utils import quote
 from pysmt.walkers import TreeWalker
 from pysmt.walkers.generic import handles
-from pysmt.utils import quote
-from pysmt.constants import is_pysmt_fraction, is_pysmt_integer
 
 
 class HRPrinter(TreeWalker):
@@ -251,6 +251,11 @@ class HRPrinter(TreeWalker):
         self.walk(formula.arg(0))
         self.write(")")
 
+    def walk_realtoint(self,formula, **kwargs):
+        self.write("to_int(" )
+        self.walk(formula.arg(0))
+        self.write(")")
+
     def walk_int_to_str(self,formula, **kwargs):
         self.write("int.to.str(" )
         self.walk(formula.arg(0))
@@ -295,6 +300,8 @@ class HRPrinter(TreeWalker):
     def walk_plus(self, formula): return self.walk_nary(formula, " + ")
     def walk_times(self, formula): return self.walk_nary(formula, " * ")
     def walk_div(self, formula): return self.walk_nary(formula, " / ")
+
+    def walk_mod(self, formula): return self.walk_nary(formula, " % ")
     def walk_pow(self, formula): return self.walk_nary(formula, " ^ ")
     def walk_iff(self, formula): return self.walk_nary(formula, " <-> ")
     def walk_implies(self, formula): return self.walk_nary(formula, " -> ")

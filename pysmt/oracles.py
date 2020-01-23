@@ -27,11 +27,9 @@ properties of formulae.
 """
 
 import pysmt
-import pysmt.walkers as walkers
 import pysmt.operators as op
-
+import pysmt.walkers as walkers
 from pysmt import typing
-
 from pysmt.logics import Logic, Theory, get_closer_pysmt_logic
 
 
@@ -248,6 +246,13 @@ class TheoryOracle(walkers.DagWalker):
         return theory_out
 
     @walkers.handles([op.STR_LENGTH, op.STR_INDEXOF, op.STR_TO_INT])
+    def walk_str_int(self, formula, args, **kwargs):
+        theory_out = self.walk_combine(formula, args, **kwargs)
+        theory_out.integer_arithmetic = True
+        theory_out.integer_difference = True
+        return theory_out
+
+    @walkers.handles([op.REALTOINT])
     def walk_str_int(self, formula, args, **kwargs):
         theory_out = self.walk_combine(formula, args, **kwargs)
         theory_out.integer_arithmetic = True

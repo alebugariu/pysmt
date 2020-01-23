@@ -15,14 +15,13 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from functools import partial
 
 from six.moves import xrange, cStringIO
 
 import pysmt.operators as op
 from pysmt.environment import get_env
-from pysmt.walkers import TreeWalker, DagWalker, handles
 from pysmt.utils import quote
+from pysmt.walkers import TreeWalker, DagWalker, handles
 
 
 class SmtPrinter(TreeWalker):
@@ -61,7 +60,9 @@ class SmtPrinter(TreeWalker):
     def walk_lt(self, formula): return self.walk_nary(formula, "<")
     def walk_ite(self, formula): return self.walk_nary(formula, "ite")
     def walk_toreal(self, formula): return self.walk_nary(formula, "to_real")
+    def walk_realtoint(self, formula): return self.walk_nary(formula, "to_int")
     def walk_div(self, formula): return self.walk_nary(formula, "/")
+    def walk_mod(self, formula): return self.walk_nary(formula, "mod")
     def walk_pow(self, formula): return self.walk_nary(formula, "pow")
     def walk_bv_and(self, formula): return self.walk_nary(formula, "bvand")
     def walk_bv_or(self, formula): return self.walk_nary(formula, "bvor")
@@ -145,7 +146,12 @@ class SmtPrinter(TreeWalker):
         self.write(") ")
         body = formula.arg(0)
 
-        annotations_for_body = self.annotations[body]
+        if self.annotations is None:
+            has_pattern = False
+            has_no_pattern = False
+            annotations_for_body = None
+        else:
+            annotations_for_body = self.annotations[body]
         if annotations_for_body is None:
             has_pattern = False
             has_no_pattern = False
@@ -386,8 +392,14 @@ class SmtDagPrinter(DagWalker):
     def walk_toreal(self, formula, args):
         return self.walk_nary(formula, args, "to_real")
 
+    def walk_realtoint(self, formula, args):
+        return self.walk_nary(formula, args, "to_int")
+
     def walk_div(self, formula, args):
         return self.walk_nary(formula, args, "/")
+
+    def walk_mod(self, formula, args):
+        return self.walk_nary(formula, args, "mod")
 
     def walk_pow(self, formula, args):
         return self.walk_nary(formula, args, "pow")
@@ -422,6 +434,7 @@ class SmtDagPrinter(DagWalker):
     def walk_bv_urem(self, formula, args):
 
         return self.walk_nary(formula, args, "bvurem")
+
     def walk_bv_lshl(self, formula, args):
         return self.walk_nary(formula, args, "bvshl")
 
@@ -621,6 +634,9 @@ class SmtDagPrinter(DagWalker):
 
     def walk_str_to_int(self,formula, args, **kwargs):
         return "( str.to.int %s )" % args[0]
+
+    def walk_realtoint(self,formula, args, **kwargs):
+        return "( to_int %s )" % args[0]
 
     def walk_int_to_str(self,formula, args, **kwargs):
         return "( int.to.str %s )" % args[0]

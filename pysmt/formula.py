@@ -272,6 +272,10 @@ class FormulaManager(object):
         return self.create_node(node_type=op.DIV,
                                 args=(left, right))
 
+    def Mod(self, left, right):
+        """FIXME add description"""
+        return self.MOD(left, right)
+
     def Equals(self, left, right):
         """ Creates an expression of the form: left = right
 
@@ -886,6 +890,11 @@ class FormulaManager(object):
     def BVSGE(self, left, right):
         """Returns the SIGNED GREATER-THAN-OR-EQUAL-TO comparison for BV."""
         return self.BVSLE(right, left)
+
+    def MOD(self, left, right):
+        """TODO add description"""
+        return self.create_node(node_type=op.MOD,
+                                args=(left, right))
 
     def BVSMod(self, left, right):
         """Returns the SIGNED MODULUS of left divided by right."""
