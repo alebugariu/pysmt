@@ -797,7 +797,9 @@ class SmtLibParser(object):
             else:
                 value = tk
             tk = tokens.consume()
-            self.cache.annotations.add(term, keyword, value)
+            # ATG: Dafny produces things like (! true :qid (...) :pattern (...)) that we should skip
+            if term.is_quantifier():
+                self.cache.annotations.add(term, keyword, value)
 
         assert len(stack[-1]) == 0
         # re-add the ")" to the tokenizer because we consumed it, but
