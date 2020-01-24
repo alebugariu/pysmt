@@ -865,6 +865,10 @@ def IntToStr(x):
     """
     return get_env().formula_manager.IntToStr(x)
 
+def IntToBV(x):
+    """TODO: add description"""
+    return get_env().formula_manager.IntToBV(x)
+
 #
 # Arrays
 #

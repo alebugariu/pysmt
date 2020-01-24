@@ -126,6 +126,12 @@ class SimpleTypeChecker(walkers.DagWalker):
         #pylint: disable=unused-argument
         return self.walk_type_to_type(formula, args, INT, STRING)
 
+    @walkers.handles(op.INT_TO_BV)
+    def walk_int_to_bv(self, formula, args, **kwargs):
+        #pylint: disable=unused-argument
+        bv_type = BVType(formula.bv_width())
+        return self.walk_type_to_type(formula, args, INT, bv_type)
+
     def walk_bv_comp(self, formula, args, **kwargs):
         # We check that all children are BV and the same size
         a,b = args

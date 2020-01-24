@@ -1021,6 +1021,10 @@ class FormulaManager(object):
         """
         return self.create_node(node_type=op.INT_TO_STR, args=(x, ))
 
+    def IntToBV(self, x):
+        """TODO: add description"""
+        return self.create_node(node_type=op.INT_TO_BV, args=(x, ))
+
     def StrCharAt(self, s, i):
         """Returns a single character String at position i.
 

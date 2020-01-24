@@ -219,6 +219,9 @@ class IdentityDagWalker(DagWalker):
     def walk_int_to_str(self, formula, args, **kwargs):
         return self.mgr.IntToStr(args[0])
 
+    def walk_int_to_bv(self, formula, args, **kwargs):
+        return self.mgr.IntToBV(args[0])
+
     def walk_str_charat(self, formula, args, **kwargs):
         return self.mgr.StrCharAt(args[0], args[1])
 

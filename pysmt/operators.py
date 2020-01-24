@@ -25,7 +25,7 @@ from itertools import chain
 
 from six.moves import xrange
 
-ALL_TYPES = list(xrange(0,68))
+ALL_TYPES = list(xrange(0,69))
 
 (
 FORALL, EXISTS, AND, OR, NOT, IMPLIES, IFF, # Boolean Logic (0-6)
@@ -81,6 +81,7 @@ ALGEBRAIC_CONSTANT,                         # Algebraic Number (64)
 BV_TONATURAL,                               # BV to Natural Conversion (65)
 REALTOINT,                                  # Real to Integer Conversion (66)
 MOD,                                        # Integer Modulo (67)
+INT_TO_BV,                                  # Integer to BV Conversion (68)
 ) = ALL_TYPES
 
 QUANTIFIERS = frozenset([FORALL, EXISTS])
@@ -107,13 +108,14 @@ BV_OPERATORS = frozenset([BV_NOT, BV_AND, BV_OR, BV_XOR,
                           BV_CONCAT, BV_EXTRACT, BV_NEG, BV_ADD,
                           BV_SUB, BV_MUL, BV_UDIV, BV_UREM, BV_LSHL, BV_LSHR,
                           BV_ROL, BV_ROR, BV_ZEXT, BV_SEXT,
-                          BV_COMP, BV_SDIV, BV_SREM, BV_ASHR])
+                          BV_COMP, BV_SDIV, BV_SREM, BV_ASHR,
+                          INT_TO_BV])
 
 STR_OPERATORS = frozenset([STR_LENGTH, STR_CONCAT, STR_INDEXOF, STR_REPLACE,
-                           STR_SUBSTR, STR_CHARAT, STR_TO_INT, INT_TO_STR,])
+                           STR_SUBSTR, STR_CHARAT, INT_TO_STR,])
 
 IRA_OPERATORS = frozenset([PLUS, MINUS, TIMES, TOREAL, DIV, POW, BV_TONATURAL,
-                          REALTOINT, MOD])
+                          REALTOINT, MOD, STR_TO_INT])
 
 ARRAY_OPERATORS = frozenset([ARRAY_SELECT, ARRAY_STORE, ARRAY_VALUE])
 
@@ -218,6 +220,7 @@ __OP_STR__ = {
     STR_SUFFIXOF: "STR_SUFFIXOF",
     STR_TO_INT: "STR_TO_INT",
     INT_TO_STR: "INT_TO_STR",
+    INT_TO_BV: "INT_TO_BV",
     STR_CHARAT: "STR_CHARAT",
     BV_TONATURAL : "BV_TONATURAL",
     ARRAY_SELECT : "ARRAY_SELECT",

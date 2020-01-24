@@ -448,6 +448,8 @@ class SmtLibParser(object):
                             'str.to.int':self._operator_adapter(mgr.StrToInt),
                             'int.to.str':self._operator_adapter(mgr.IntToStr),
                             'bv2nat':self._operator_adapter(mgr.BVToNatural),
+                            'bv2int':self._operator_adapter(mgr.BVToNatural), # commes from Dafny, Z3
+                            'int2bv':self._operator_adapter(mgr.IntToBV),
                             # arrays
                             'select':self._operator_adapter(mgr.Select),
                             'store':self._operator_adapter(mgr.Store),
@@ -598,6 +600,16 @@ class SmtLibParser(object):
                 raise PysmtSyntaxError("Expected number in '_ bv' expression: "
                                        "'%s'" % op, tokens.pos_info)
             fun = mgr.BV(v, width)
+
+        #elif op.startswith("int2bv"):
+        #    swidth = self.parse_atom(tokens, "expression")
+        #    try:
+        #        v = int(swidth)
+        #    except ValueError:
+        #        raise PysmtSyntaxError("Expected number in '_ int2bv' expression: "
+        #                               "'%s'" % op, tokens.pos_info)
+
+        #    fun = lambda x: mgr.IntToBV(x)
 
         else:
             raise PysmtSyntaxError("Unexpected '_' expression '%s'" % op,
