@@ -28,6 +28,7 @@ from pysmt.constants import Fraction
 from pysmt.environment import get_env
 from pysmt.exceptions import PysmtTypeError
 from pysmt.exceptions import UnknownSmtLibCommandError, PysmtSyntaxError
+from pysmt.fnode import FNode
 from pysmt.logics import get_logic_by_name, UndefinedLogicError
 from pysmt.smtlib.annotations import Annotations
 from pysmt.smtlib.script import SmtLibCommand, SmtLibScript
@@ -852,7 +853,7 @@ class SmtLibParser(object):
 
                     try:
                         res = fun(*lst)
-                        if res.is_quantifier():
+                        if isinstance(res, FNode) and res.is_quantifier():
                             q_body = res.arg(0)
                             annotations_for_quantifier = self.cache.annotations[q_body]
 
