@@ -602,15 +602,15 @@ class SmtLibParser(object):
                                        "'%s'" % op, tokens.pos_info)
             fun = mgr.BV(v, width)
 
-        #elif op.startswith("int2bv"):
-        #    swidth = self.parse_atom(tokens, "expression")
-        #    try:
-        #        v = int(swidth)
-        #    except ValueError:
-        #        raise PysmtSyntaxError("Expected number in '_ int2bv' expression: "
-        #                               "'%s'" % op, tokens.pos_info)
+        elif op.startswith("int2bv"):
+            swidth = self.parse_atom(tokens, "expression")
+            try:
+                v = int(swidth)
+            except ValueError:
+                raise PysmtSyntaxError("Expected number in '_ int2bv' expression: "
+                                       "'%s'" % op, tokens.pos_info)
 
-        #    fun = lambda x: mgr.IntToBV(x)
+            fun = lambda x: mgr.IntToBV(x, v)
 
         else:
             raise PysmtSyntaxError("Unexpected '_' expression '%s'" % op,

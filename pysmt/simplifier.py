@@ -944,6 +944,14 @@ class Simplifier(pysmt.walkers.DagWalker):
             return self.manager.String(str(i.constant_value()))
         return self.manager.IntToStr(i)
 
+    def walk_int_to_bv(self, formula, args, **kwargs):
+        i = args[0]
+        if i.is_constant():
+            return self.manager.BV(i.constant_value(), width=formula._content.payload[0])
+        else:
+            return self.manager.IntToBV(i, width=formula._content.payload[0])
+
+
     def walk_bv_tonatural(self, formula, args, **kwargs):
         if args[0].is_bv_constant():
             return self.manager.Int(args[0].constant_value())
