@@ -19,6 +19,7 @@
 from six.moves import xrange, cStringIO
 
 import pysmt.operators as op
+from pysmt.constants import is_python_integer
 from pysmt.environment import get_env
 from pysmt.utils import quote
 from pysmt.walkers import TreeWalker, DagWalker, handles
@@ -86,7 +87,7 @@ class SmtPrinter(TreeWalker):
     def walk_bv_sdiv(self, formula): return self.walk_nary(formula, "bvsdiv")
     def walk_bv_srem(self, formula): return self.walk_nary(formula, "bvsrem")
     def walk_bv_tonatural(self, formula): return self.walk_nary(formula, "bv2nat")
-    def walk_int_to_bv(self, formula): return self.walk_nary(formula, "int2bv")
+    #def walk_int_to_bv(self, formula): return self.walk_nary(formula, "int2bv")
     def walk_array_select(self, formula): return self.walk_nary(formula, "select")
     def walk_array_store(self, formula): return self.walk_nary(formula, "store")
 
@@ -181,6 +182,12 @@ class SmtPrinter(TreeWalker):
         yield formula.arg(0)
         self.write(")")
 
+    @handles(op.INT_TO_BV)
+    def walk_int_to_bv(self, formula):
+        self.write("((_ int2bv %d) " % formula._content.payload)
+        yield formula.arg(0)
+        self.write(")")
+
     @handles(op.BV_ROR, op.BV_ROL)
     def walk_bv_rotate(self, formula):
         if formula.is_bv_ror():
@@ -188,9 +195,15 @@ class SmtPrinter(TreeWalker):
         else:
             assert formula.is_bv_rol()
             rotate_type = "rotate_left"
-        self.write("((_ %s %d) " % (rotate_type,
-                                     formula.bv_rotation_step()))
-        yield formula.arg(0)
+        rot_step = formula.bv_rotation_step()
+        if is_python_integer(rot_step):
+            self.write("((_ %s %d) " % (rotate_type, rot_step))
+            yield formula.arg(0)
+        else:
+            self.write("(ext_%s " % rotate_type)
+            yield formula.arg(0)
+            self.write(" ")
+            yield rot_step
         self.write(")")
 
     @handles(op.BV_ZEXT, op.BV_SEXT)

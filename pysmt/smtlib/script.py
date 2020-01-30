@@ -76,7 +76,7 @@ class SmtLibCommand(namedtuple('SmtLibCommand', ['name', 'args'])):
             outstream.write("(%s " % self.name)
             assertion = self.args[0]
             annotations_for_assertion = printer.annotations[assertion]
-            if annotations_for_assertion is not None and'named' in annotations_for_assertion.keys():
+            if annotations_for_assertion is not None and 'named' in annotations_for_assertion.keys():
                 (assertion_name, ) = annotations_for_assertion['named']
                 outstream.write("(! ")
                 printer.printer(assertion)

@@ -24,6 +24,7 @@ reasoning about the type of formulae.
 """
 import pysmt.operators as op
 import pysmt.walkers as walkers
+from pysmt.constants import is_python_integer
 from pysmt.exceptions import PysmtTypeError
 from pysmt.typing import BOOL, REAL, INT, BVType, ArrayType, STRING
 
@@ -188,8 +189,9 @@ class SimpleTypeChecker(walkers.DagWalker):
     def walk_bv_rotate(self, formula, args, **kwargs):
         #pylint: disable=unused-argument
         target_width = formula.bv_width()
-        if target_width < formula.bv_rotation_step() or target_width < 0:
-            return None
+        rot_step = formula.bv_rotation_step()
+        if is_python_integer(rot_step) and target_width < formula.bv_rotation_step() or target_width < 0:
+                return None
         if target_width != args[0].width:
             return None
         return BVType(target_width)

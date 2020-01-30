@@ -261,6 +261,11 @@ class HRPrinter(TreeWalker):
         self.walk(formula.arg(0))
         self.write(")")
 
+    def walk_int_to_bv(self,formula, **kwargs):
+        self.write("int2bv(")
+        self.walk(formula.arg(0))
+        self.write(")")
+
     def walk_array_select(self, formula):
         yield formula.arg(0)
         self.write("[")

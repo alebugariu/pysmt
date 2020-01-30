@@ -1436,9 +1436,15 @@ class SmtLibZ3Parser(SmtLibParser):
         self.interpreted['bv2int'] = self._operator_adapter(mgr.BVToNatural)
 
     def _ext_rotate_left(self, x, y):
-        return self.env.formula_manager.BVRol(x, y.simplify().constant_value())
+        rhs = y.simplify()
+        if rhs.is_constant():
+            rhs = rhs.constant_value()
+        return self.env.formula_manager.BVRol(x, rhs)
 
     def _ext_rotate_right(self, x, y):
-        return self.env.formula_manager.BVRor(x, y.simplify().constant_value())
+        rhs = y.simplify()
+        if rhs.is_constant():
+            rhs = rhs.constant_value()
+        return self.env.formula_manager.BVRor(x, rhs)
 
 # EOC SmtLibZ3Parser

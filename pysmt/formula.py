@@ -796,18 +796,18 @@ class FormulaManager(object):
 
     def BVRol(self, formula, steps):
         """Returns the LEFT rotation of the BV by the number of steps."""
-        if not is_python_integer(steps):
-            raise PysmtTypeError("BVRol: 'steps' should be an integer. Got %s" \
-                                 % steps)
+        #if not is_python_integer(steps):
+        #    raise PysmtTypeError("BVRol: 'steps' should be an integer. Got %s" \
+        #                         % steps)
         return self.create_node(node_type=op.BV_ROL,
                                 args=(formula,),
                                 payload=(formula.bv_width(), steps))
 
     def BVRor(self, formula, steps):
         """Returns the RIGHT rotation of the BV by the number of steps."""
-        if not is_python_integer(steps):
-            raise PysmtTypeError("BVRor: 'steps' should be an integer. Got %s" \
-                                 % steps)
+        #if not is_python_integer(steps):
+        #    raise PysmtTypeError("BVRor: 'steps' should be an integer. Got %s" \
+        #                         % steps)
         return self.create_node(node_type=op.BV_ROR,
                                 args=(formula,),
                                 payload=(formula.bv_width(), steps))
