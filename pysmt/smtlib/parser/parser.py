@@ -811,8 +811,8 @@ class SmtLibParser(object):
                 value = tk
             tk = tokens.consume()
             # ATG: Dafny produces things like (! true :qid (...) :pattern (...)) that we should skip
-            quant_annotations = ['skolemid', 'qid', 'pattern', 'no-pattern',]
-            if keyword not in quant_annotations or term.is_quantifier():
+            skipped_annotations = ['skolemid', 'qid']
+            if not term.is_bool_constant(True) and keyword not in skipped_annotations:
                 self.cache.annotations.add(term, keyword, value)
 
         assert len(stack[-1]) == 0
