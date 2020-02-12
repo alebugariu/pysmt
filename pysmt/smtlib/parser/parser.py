@@ -658,49 +658,55 @@ class SmtLibParser(object):
         the token
         """
         res = self.cache.get(token)
-        if res is None:
-            if token.startswith("#"):
-                # it is a BitVector
-                value = None
-                width = None
-                if token[1] == "b":
-                    # binary
-                    width = len(token) - 2
-                    value = int("0" + token[1:], 2)
-                else:
-                    if token[1] != "x":
-                        raise PysmtSyntaxError("Invalid bit-vector constant "
-                                               "'%s'" % token)
-                    width = (len(token) - 2) * 4
-                    value = int("0" + token[1:], 16)
-                res = mgr.BV(value, width)
-            elif token[0] == '"':
-                # String constant
-                val = token[1:-1]
-                val = val.replace('""', '"')
-                res = mgr.String(val)
+
+        if isinstance(res, list):
+            assert len(res) == 1 # No ambiguity at this point!
+            return res[0]
+        elif isinstance(res, FNode):
+            return res
+
+        if token.startswith("#"):
+            # it is a BitVector
+            value = None
+            width = None
+            if token[1] == "b":
+                # binary
+                width = len(token) - 2
+                value = int("0" + token[1:], 2)
             else:
-                # it could be a number or a string
-                try:
-                    frac = Fraction(token)
-                    if frac.denominator == 1:
-                        # We found an integer, depending on the logic this can be
-                        # an Int or a Real
-                        if self.logic is None or \
-                           self.logic.theory.integer_arithmetic:
-                            if "." in token:
-                                res = mgr.Real(frac)
-                            else:
-                                res = mgr.Int(frac.numerator)
-                        else:
+                if token[1] != "x":
+                    raise PysmtSyntaxError("Invalid bit-vector constant "
+                                           "'%s'" % token)
+                width = (len(token) - 2) * 4
+                value = int("0" + token[1:], 16)
+            res = mgr.BV(value, width)
+        elif token[0] == '"':
+            # String constant
+            val = token[1:-1]
+            val = val.replace('""', '"')
+            res = mgr.String(val)
+        else:
+            # it could be a number or a string
+            try:
+                frac = Fraction(token)
+                if frac.denominator == 1:
+                    # We found an integer, depending on the logic this can be
+                    # an Int or a Real
+                    if self.logic is None or \
+                       self.logic.theory.integer_arithmetic:
+                        if "." in token:
                             res = mgr.Real(frac)
+                        else:
+                            res = mgr.Int(frac.numerator)
                     else:
                         res = mgr.Real(frac)
+                else:
+                    res = mgr.Real(frac)
 
-                except ValueError:
-                    # a string constant
-                    res = token
-            self.cache.bind(token, res)
+            except ValueError:
+                # a string constant
+                res = token
+        self.cache.bind(token, res)
         return res
 
     def _exit_let(self, varlist, bdy):
@@ -828,6 +834,10 @@ class SmtLibParser(object):
         """
         mgr = self.env.formula_manager
         stack = []
+        def push_to_stack(new_item):
+            nonlocal stack
+            assert not isinstance(new_item, list)
+            stack[-1].append(new_item)
 
         try:
             while True:
@@ -843,23 +853,21 @@ class SmtLibParser(object):
                         fun(stack, tokens, tk)
                     else:
 
-                        def get_function_for_args(fun_list, args):
+                        def get_function_for_args(fun_name, args):
                             arg_type_list = [x.get_type() for x in args]
+                            fun_list = mgr.symbols[fun_name]
                             for fun in fun_list:
                                 if list(fun.get_type().param_types) == arg_type_list:
                                     fun_app = mgr.create_node(FUNCTION, args=tuple(args), payload=fun)
                                     return fun_app
-                            return None
+                            raise PysmtSyntaxError("None of the declared functions match expected type signature")
 
-                        a = None
                         if tk in mgr.symbols:
-                            all_symbols_with_this_name = mgr.symbols[tk]
-                            typ = all_symbols_with_this_name[0]._content.payload[1]
-                            if isinstance(typ, _FunctionType):
-                                a = lambda *args: get_function_for_args(all_symbols_with_this_name, list(args))
-                        if not a:
+                            a = lambda *args, tk=tk: get_function_for_args(tk, list(args))
+                        else:
                             a = self.atom(tk, mgr)
-                        stack[-1].append(a)
+
+                        push_to_stack(a)
 
                 elif tk == ")":
                     try:
@@ -913,13 +921,14 @@ class SmtLibParser(object):
                         raise err
 
                     if len(stack) > 0:
-                        stack[-1].append(res)
+                        push_to_stack(res)
                     else:
                         return res
 
                 else:
                     try:
-                        stack[-1].append(self.atom(tk, mgr))
+                        a = self.atom(tk, mgr)
+                        push_to_stack(a)
                     except IndexError:
                         return self.atom(tk, mgr)
         except StopIteration:

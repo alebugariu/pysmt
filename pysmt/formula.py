@@ -134,7 +134,7 @@ class FormulaManager(object):
         symbols_for_name = self.symbols.get(name, None)
         if not symbols_for_name or not any([symb.symbol_type() == typename for symb in symbols_for_name]):
             return self._create_symbol(name, typename)
-        return symbols_for_name
+        return symbols_for_name[0]
 
     # Node definitions start here
 
