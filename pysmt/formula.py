@@ -26,7 +26,7 @@ and therefore are only virtual. Common examples are GE, GT that are
 rewritten as LE and LT. Similarly, the operator Xor is rewritten using
 its definition.
 """
-
+import re
 import sys
 if sys.version_info >= (3, 3):
     from collections.abc import Iterable
@@ -104,7 +104,10 @@ class FormulaManager(object):
         n = self.create_node(node_type=op.SYMBOL,
                              args=tuple(),
                              payload=(name, typename))
-        self.symbols[name] = n
+        if name not in self.symbols:
+            self.symbols[name] = [n]
+        else:
+            self.symbols[name].append(n)
         return n
 
     def new_fresh_symbol(self, typename, base="FV%d"):
@@ -120,22 +123,18 @@ class FormulaManager(object):
 
     def get_symbol(self, name):
         try:
-            return self.symbols[name]
+            return self.symbols[name][0]
         except KeyError:
             raise UndefinedSymbolError(name)
 
     def get_all_symbols(self):
-        return self.symbols.values()
+        return (val for vals in self.symbols.values() for val in vals)
 
     def get_or_create_symbol(self, name, typename):
-        s = self.symbols.get(name, None)
-        if s is None:
+        symbols_for_name = self.symbols.get(name, None)
+        if not symbols_for_name or not any([symb.symbol_type() == typename for symb in symbols_for_name]):
             return self._create_symbol(name, typename)
-        if not s.symbol_type() == typename:
-            raise PysmtTypeError("Trying to redefine symbol '%s' with a new type"
-                                 ". Previous type was '%s' new type is '%s'" %
-                                 (name, s.symbol_type(), typename))
-        return s
+        return symbols_for_name
 
     # Node definitions start here
 

@@ -30,9 +30,10 @@ from pysmt.exceptions import PysmtTypeError
 from pysmt.exceptions import UnknownSmtLibCommandError, PysmtSyntaxError
 from pysmt.fnode import FNode
 from pysmt.logics import get_logic_by_name, UndefinedLogicError
+from pysmt.operators import FUNCTION
 from pysmt.smtlib.annotations import Annotations
 from pysmt.smtlib.script import SmtLibCommand, SmtLibScript
-from pysmt.typing import _TypeDecl, PartialType
+from pysmt.typing import _TypeDecl, PartialType, _FunctionType
 from pysmt.utils import interactive_char_iterator
 from src.utils.string import create_substituted_string
 
@@ -841,7 +842,24 @@ class SmtLibParser(object):
                         fun = self.interpreted[tk]
                         fun(stack, tokens, tk)
                     else:
-                        stack[-1].append(self.atom(tk, mgr))
+
+                        def get_function_for_args(fun_list, args):
+                            arg_type_list = [x.get_type() for x in args]
+                            for fun in fun_list:
+                                if list(fun.get_type().param_types) == arg_type_list:
+                                    fun_app = mgr.create_node(FUNCTION, args=tuple(args), payload=fun)
+                                    return fun_app
+                            return None
+
+                        a = None
+                        if tk in mgr.symbols:
+                            all_symbols_with_this_name = mgr.symbols[tk]
+                            typ = all_symbols_with_this_name[0]._content.payload[1]
+                            if isinstance(typ, _FunctionType):
+                                a = lambda *args: get_function_for_args(all_symbols_with_this_name, list(args))
+                        if not a:
+                            a = self.atom(tk, mgr)
+                        stack[-1].append(a)
 
                 elif tk == ")":
                     try:
@@ -1133,10 +1151,6 @@ class SmtLibParser(object):
                                    "Expected ')'" %
                                    (p, command), tokens.pos_info)
 
-    def _function_call_helper(self, v, *args):
-        """ Helper function for dealing with function calls """
-        return self.env.formula_manager.Function(v, args)
-
     def get_assignment_list(self, script):
         """
         Parse an assignment list produced by get-model and get-value
@@ -1257,10 +1271,7 @@ class SmtLibParser(object):
             typename = self.env.type_manager.FunctionType(typename, params)
 
         v = self._get_var(var, typename)
-        if v.symbol_type().is_function_type():
-            self.cache.bind(var, \
-                    functools.partial(self._function_call_helper, v))
-        else:
+        if not v.symbol_type().is_function_type():
             self.cache.bind(var, v)
         return SmtLibCommand(current, [v])
 
