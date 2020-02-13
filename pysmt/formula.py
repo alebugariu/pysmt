@@ -123,7 +123,9 @@ class FormulaManager(object):
 
     def get_symbol(self, name):
         try:
-            return self.symbols[name][0]
+            symbols_for_name = self.symbols[name]
+            assert len(symbols_for_name) == 1
+            return symbols_for_name[0]
         except KeyError:
             raise UndefinedSymbolError(name)
 
@@ -134,6 +136,7 @@ class FormulaManager(object):
         symbols_for_name = self.symbols.get(name, None)
         if not symbols_for_name or not any([symb.symbol_type() == typename for symb in symbols_for_name]):
             return self._create_symbol(name, typename)
+        assert len(symbols_for_name) == 1
         return symbols_for_name[0]
 
     # Node definitions start here
