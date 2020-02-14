@@ -122,7 +122,9 @@ class FormulaManager(object):
 
     def get_symbol(self, name):
         try:
-            return self.symbols[name][0]
+            symbols_for_name = self.symbols[name]
+            assert len(symbols_for_name) == 1
+            return symbols_for_name[0]
         except KeyError:
             raise UndefinedSymbolError(name)
 
@@ -137,7 +139,7 @@ class FormulaManager(object):
         if len(symbols_for_name_and_type) == 0:
             return self._create_symbol(name, typename)
         else:
-            assert len(symbols_for_name_and_type)
+            assert len(symbols_for_name_and_type) == 1
             return symbols_for_name_and_type[0]
 
     # Node definitions start here
