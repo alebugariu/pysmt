@@ -26,7 +26,6 @@ and therefore are only virtual. Common examples are GE, GT that are
 rewritten as LE and LT. Similarly, the operator Xor is rewritten using
 its definition.
 """
-import re
 import sys
 if sys.version_info >= (3, 3):
     from collections.abc import Iterable
@@ -132,9 +131,14 @@ class FormulaManager(object):
 
     def get_or_create_symbol(self, name, typename):
         symbols_for_name = self.symbols.get(name, None)
-        if not symbols_for_name or not any([symb.symbol_type() == typename for symb in symbols_for_name]):
+        if not symbols_for_name:
             return self._create_symbol(name, typename)
-        return symbols_for_name[0]
+        symbols_for_name_and_type = [symb for symb in symbols_for_name if symb.symbol_type() == typename]
+        if len(symbols_for_name_and_type) == 0:
+            return self._create_symbol(name, typename)
+        else:
+            assert len(symbols_for_name_and_type)
+            return symbols_for_name_and_type[0]
 
     # Node definitions start here
 
