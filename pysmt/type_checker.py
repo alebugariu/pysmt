@@ -33,7 +33,7 @@ class SimpleTypeChecker(walkers.DagWalker):
 
     def __init__(self, env=None):
         walkers.DagWalker.__init__(self, env=env)
-        self.be_nice = False
+        self.be_nice = True
 
     def _get_key(self, formula, **kwargs):
         return formula
