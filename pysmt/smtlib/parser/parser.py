@@ -716,10 +716,10 @@ class SmtLibParser(object):
         """
         Cleans the execution environment when we exit the scope of a quantifier
         """
-        variables = set()
+        variables = list()
         for vname, var in vrs:
             self.cache.unbind(vname)
-            variables.add(var)
+            variables.append(var)
         return fun(variables, body)
 
     def _enter_let(self, stack, tokens, key):
