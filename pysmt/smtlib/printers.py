@@ -166,11 +166,11 @@ class SmtPrinter(TreeWalker):
             if has_pattern:
                 patterns = annotations_for_body['pattern']
                 for pattern in patterns:
-                    self.write(" :pattern " + pattern + " ")
+                    self.write(" :pattern " + pattern)
             if has_no_pattern:
                 no_patterns = annotations_for_body['no-pattern']
                 for no_pattern in no_patterns:
-                    self.write(" :no-pattern " + no_pattern + " ")
+                    self.write(" :no-pattern " + no_pattern)
             self.write(" )")
         else:
             yield body

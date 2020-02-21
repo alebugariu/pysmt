@@ -31,9 +31,9 @@ class Annotations(object):
         """Adds an annotation for the given formula, possibly with the
         specified value"""
         term_annotations = self._annotations.setdefault(formula, {})
-        values = term_annotations.setdefault(annotation, set())
+        values = term_annotations.setdefault(annotation, list())
         if value is not None:
-            values.add(value)
+            values.append(value)
 
 
     def remove(self, formula):

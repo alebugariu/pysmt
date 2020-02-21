@@ -33,9 +33,8 @@ from pysmt.logics import get_logic_by_name, UndefinedLogicError
 from pysmt.operators import FUNCTION
 from pysmt.smtlib.annotations import Annotations
 from pysmt.smtlib.script import SmtLibCommand, SmtLibScript
-from pysmt.typing import _TypeDecl, PartialType, _FunctionType
+from pysmt.typing import _TypeDecl, PartialType
 from pysmt.utils import interactive_char_iterator
-from src.utils.string import create_substituted_string
 
 
 def open_(fname):
