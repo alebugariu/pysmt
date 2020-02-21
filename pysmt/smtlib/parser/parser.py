@@ -333,7 +333,6 @@ class SmtLibParser(object):
 
         # Placeholders for fields filled by self._reset
         self.cache = None
-        self.quant_var_renaming_map = dict()
         self.logic = None
         self._reset()
 
@@ -648,7 +647,6 @@ class SmtLibParser(object):
 
             fresh_var = self.env.formula_manager.FreshSymbol(typename=type_name,
                                                              template=name+"%d")
-            self.quant_var_renaming_map[fresh_var] = name
             return fresh_var
 
     def atom(self, token, mgr):
@@ -878,42 +876,6 @@ class SmtLibParser(object):
 
                     try:
                         res = fun(*lst)
-                        if isinstance(res, FNode) and res.is_quantifier():
-                            q_body = res.arg(0)
-                            annotations_for_quantifier = self.cache.annotations[q_body]
-
-                            def get_annotation_by_name(all_annotations, a_name: str):
-                                return {key: value for key, value in all_annotations.items() if a_name == key}
-
-                            def rewrite_annotations(annotations, a_name: str):
-                                qvars = res.quantifier_vars()
-                                rewrite_list = dict()
-                                if a_name not in annotations:
-                                    return dict()
-                                for pattern in annotations[a_name]:
-                                    for qvar in qvars:
-                                        if qvar not in self.quant_var_renaming_map:
-                                            continue
-
-                                        old_name: str = self.quant_var_renaming_map[qvar]
-                                        new_name: str = qvar.symbol_name()
-                                        new_pat: str = create_substituted_string(self.TOKEN_ALPHABET, old_name,
-                                                                                 new_name, pattern)
-                                        if a_name in rewrite_list:
-                                            rewrite_list[a_name].add(new_pat)
-                                        else:
-                                            rewrite_list[a_name] = {new_pat}
-
-                                return rewrite_list
-
-                            if annotations_for_quantifier is not None:
-                                no_patterns_for_quantifier = get_annotation_by_name(annotations_for_quantifier, 'no-pattern')
-                                patterns_for_quantifier = get_annotation_by_name(annotations_for_quantifier, 'pattern')
-                                no_pat_rewrite_list = rewrite_annotations(no_patterns_for_quantifier, 'no-pattern')
-                                pat_rewrite_list = rewrite_annotations(patterns_for_quantifier, 'pattern')
-                                self.cache.annotations[q_body].update(no_pat_rewrite_list)
-                                self.cache.annotations[q_body].update(pat_rewrite_list)
-
                     except TypeError as err:
                         if not callable(fun):
                             raise NotImplementedError("Unknown function '%s'" % fun)
