@@ -620,6 +620,9 @@ QF_AUFBVLIRA = Logic(name="QF_AUFBVLIRA",
 AUTO = Logic(name="Auto",
              description="Special logic used to indicate that the logic to be used depends on the formula.")
 
+ALL = Logic(name="ALL",
+             description="The most general logic supported by the solver.")
+
 SMTLIB2_LOGICS = frozenset([ AUFLIA,
                              AUFLIRA,
                              AUFNIRA,

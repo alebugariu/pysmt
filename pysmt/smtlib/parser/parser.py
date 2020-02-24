@@ -29,7 +29,7 @@ from pysmt.environment import get_env
 from pysmt.exceptions import PysmtTypeError
 from pysmt.exceptions import UnknownSmtLibCommandError, PysmtSyntaxError
 from pysmt.fnode import FNode
-from pysmt.logics import get_logic_by_name, UndefinedLogicError
+from pysmt.logics import get_logic_by_name, UndefinedLogicError, ALL
 from pysmt.operators import FUNCTION
 from pysmt.smtlib.annotations import Annotations
 from pysmt.smtlib.script import SmtLibCommand, SmtLibScript
@@ -1211,9 +1211,8 @@ class SmtLibParser(object):
             self.logic = get_logic_by_name(name)
             return SmtLibCommand(current, [self.logic])
         except UndefinedLogicError:
-            warn("Unknown logic '" + name + \
-                 "'. Ignoring set-logic command.")
-            return SmtLibCommand(current, [None])
+            warn("Unknown logic '" + name + "'. Replacing it with set-logic ALL.")
+            return SmtLibCommand(current, [ALL])
 
     def _cmd_declare_const(self, current, tokens):
         """(declare-const <symbol> <sort>)"""
