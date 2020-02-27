@@ -63,6 +63,7 @@ class SmtPrinter(TreeWalker):
     def walk_toreal(self, formula): return self.walk_nary(formula, "to_real")
     def walk_realtoint(self, formula): return self.walk_nary(formula, "to_int")
     def walk_div(self, formula): return self.walk_nary(formula, "/")
+    def walk_int_div(self, formula): return self.walk_nary(formula, "div")
     def walk_mod(self, formula): return self.walk_nary(formula, "mod")
     def walk_pow(self, formula): return self.walk_nary(formula, "pow")
     def walk_bv_and(self, formula): return self.walk_nary(formula, "bvand")
@@ -411,6 +412,9 @@ class SmtDagPrinter(DagWalker):
 
     def walk_div(self, formula, args):
         return self.walk_nary(formula, args, "/")
+
+    def walk_int_div(self, formula, args):
+        return self.walk_nary(formula, args, "div")
 
     def walk_mod(self, formula, args):
         return self.walk_nary(formula, args, "mod")

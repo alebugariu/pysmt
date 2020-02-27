@@ -79,7 +79,7 @@ class SimpleTypeChecker(walkers.DagWalker):
             rval = self.walk_type_to_type(formula, args, INT, INT)
         return rval
 
-    @walkers.handles(op.MOD)
+    @walkers.handles(op.MOD, op.INT_DIV)
     def walk_int_to_int(self, formula, args, **kwargs):
         # pylint: disable=unused-argument
         rval = self.walk_type_to_type(formula, args, INT, INT)

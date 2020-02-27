@@ -277,6 +277,10 @@ class FormulaManager(object):
         return self.create_node(node_type=op.DIV,
                                 args=(left, right))
 
+    def IntDiv(self, left, right):
+        """ Creates an expression of the form: left div right """
+        return self.create_node(node_type=op.INT_DIV, args=(left, right))
+
     def Mod(self, left, right):
         """FIXME add description"""
         return self.MOD(left, right)
