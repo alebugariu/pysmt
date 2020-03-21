@@ -202,13 +202,21 @@ class FormulaManager(object):
             return formula.arg(0)
         return self.create_node(node_type=op.NOT, args=(formula,))
 
-    def Implies(self, left, right):
+    def Implies(self, *args):
         """ Creates an expression of the form:
-            left -> right
+            arg0 ^ ... ^ arg{N-1} -> argN
 
-        Restriction: Left and Right must be of boolean type
+        Restriction: arg{i} must be of boolean type
         """
-        return self.create_node(node_type=op.IMPLIES, args=(left, right))
+        tuple_args = self._polymorph_args_to_tuple(args)
+        if len(tuple_args) == 0:
+            raise PysmtTypeError("Cannot create a Implies without arguments.")
+        elif len(tuple_args) == 1:
+            # Empty LHS
+            return tuple_args[0]
+        else:
+            return self.create_node(node_type=op.IMPLIES,
+                                    args=tuple_args)
 
     def Iff(self, left, right):
         """ Creates an expression of the form:
