@@ -21,6 +21,7 @@ from six.moves import xrange, cStringIO
 import pysmt.operators as op
 from pysmt.constants import is_python_integer
 from pysmt.environment import get_env
+from pysmt.smtlib.annotations import Annotations
 from pysmt.utils import quote
 from pysmt.walkers import TreeWalker, DagWalker, handles
 
@@ -32,7 +33,10 @@ class SmtPrinter(TreeWalker):
         self.stream = stream
         self.write = self.stream.write
         self.mgr = get_env().formula_manager
-        self.annotations = annotations
+        if not annotations:
+            self.annotations = Annotations()
+        else:
+            self.annotations = annotations
 
     def printer(self, f):
         self.walk(f)
