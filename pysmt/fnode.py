@@ -680,7 +680,17 @@ class FNode(object):
     def quantifier_vars(self):
         """Return the list of quantified variables."""
         assert self.is_quantifier()
-        return self._content.payload
+        return self._content.payload[0]
+
+    def quantifier_patterns(self):
+        """Return the list of quantified variables."""
+        assert self.is_quantifier()
+        return self._content.payload[1]
+
+    def quantifier_nopatterns(self):
+        """Return the list of quantified variables."""
+        assert self.is_quantifier()
+        return self._content.payload[2]
 
     def algebraic_approx_value(self, precision=10):
         value = self.constant_value()

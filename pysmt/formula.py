@@ -152,7 +152,7 @@ class FormulaManager(object):
             return self.new_fresh_symbol(typename)
         return self.new_fresh_symbol(typename, template)
 
-    def ForAll(self, variables, formula):
+    def ForAll(self, variables, formula, patterns=tuple(), nopatterns=tuple()):
         """ Creates an expression of the form:
             Forall variables. formula(variables)
 
@@ -164,9 +164,9 @@ class FormulaManager(object):
             return formula
         return self.create_node(node_type=op.FORALL,
                                 args=(formula,),
-                                payload=tuple(variables))
+                                payload=(variables, patterns, nopatterns))
 
-    def Exists(self, variables, formula):
+    def Exists(self, variables, formula, patterns=(), nopatterns=tuple()):
         """ Creates an expression of the form:
             Exists variables. formula(variables)
 
@@ -178,7 +178,7 @@ class FormulaManager(object):
             return formula
         return self.create_node(node_type=op.EXISTS,
                                 args=(formula,),
-                                payload=tuple(variables))
+                                payload=(variables, patterns, nopatterns))
 
     def Function(self, vname, params):
         """Returns the function application of vname to params.

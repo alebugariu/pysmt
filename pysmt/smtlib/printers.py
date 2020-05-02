@@ -151,34 +151,35 @@ class SmtPrinter(TreeWalker):
             self.write(" %s)" % s.symbol_type().as_smtlib(False))
 
         self.write(") ")
-        body = formula.arg(0)
 
-        if self.annotations is None:
-            has_pattern = False
-            has_no_pattern = False
-            annotations_for_body = None
-        else:
-            annotations_for_body = self.annotations[body]
-        if annotations_for_body is None:
-            has_pattern = False
-            has_no_pattern = False
-        else:
-            has_pattern = 'pattern' in annotations_for_body.keys()
-            has_no_pattern = 'no-pattern' in annotations_for_body.keys()
-        if has_pattern or has_no_pattern:
+        pats = formula.quantifier_patterns()
+        nopats = formula.quantifier_nopatterns()
+
+        if len(pats) > 0 or len(nopats) > 0:
             self.write("(! ")
-            yield body
-            if has_pattern:
-                patterns = annotations_for_body['pattern']
-                for pattern in patterns:
-                    self.write(" :pattern " + pattern)
-            if has_no_pattern:
-                no_patterns = annotations_for_body['no-pattern']
-                for no_pattern in no_patterns:
-                    self.write(" :no-pattern " + no_pattern)
+
+        body = formula.arg(0)
+        yield body
+
+        def gen_pat(ps):
+            for pat_num, pat in enumerate(ps):
+                yield pat
+                if pat_num < len(ps)-1:
+                    self.write(" ")
+
+        if len(pats) > 0:
+            self.write(" :pattern (")
+            yield from gen_pat(pats)
+            self.write(")")
+
+        if len(nopats) > 0:
+            self.write(" :no-pattern (")
+            yield from gen_pat(nopats)
+            self.write(")")
+
+        if len(pats) > 0 or len(nopats) > 0:
             self.write(" )")
-        else:
-            yield body
+
         self.write(")")
 
     def walk_bv_extract(self, formula):

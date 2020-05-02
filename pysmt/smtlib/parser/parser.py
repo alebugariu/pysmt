@@ -23,6 +23,7 @@ from warnings import warn
 from six import iteritems, PY2
 from six.moves import xrange
 
+import pysmt
 import pysmt.smtlib.commands as smtcmd
 from pysmt.constants import Fraction
 from pysmt.environment import get_env
@@ -713,7 +714,7 @@ class SmtLibParser(object):
             self.cache.unbind(k)
         return bdy
 
-    def _exit_quantifier(self, fun, vrs, body):
+    def _exit_quantifier(self, fun, vrs, patterns, nopatterns, body):
         """
         Cleans the execution environment when we exit the scope of a quantifier
         """
@@ -721,7 +722,7 @@ class SmtLibParser(object):
         for vname, var in vrs:
             self.cache.unbind(vname)
             variables.append(var)
-        return fun(variables, body)
+        return fun(tuple(variables), body, patterns, nopatterns)
 
     def _enter_let(self, stack, tokens, key):
         """Handles a let expression by recurring on the expression and
@@ -783,14 +784,34 @@ class SmtLibParser(object):
 
         stack[-1].append(self._exit_quantifier)
         stack[-1].append(quant)
-
         stack[-1].append(vrs)
 
-    def _enter_annotation(self, stack, tokens, key):
+        tk = tokens.consume()
+        assert tk == "("
+        stack.append([])
+
+        tk = tokens.consume()
+        if tk == "!":
+            patterns, nopatterns = self._enter_annotation(stack, tokens, "!", in_quant=True)
+        else:
+            patterns, nopatterns = tuple(), tuple()
+            term = self.get_expression(tokens)
+            stack[-1].append(term)
+
+        stack[-2].append(patterns)
+        stack[-2].append(nopatterns)
+
+    def _pattern_printer(self, pat):
+        return pysmt.smtlib.printers.to_smtlib(pat, daggify=False)
+
+    def _enter_annotation(self, stack, tokens, key, in_quant=False):
         """Deals with annotations"""
         #pylint: disable=unused-argument
 
         term = self.get_expression(tokens)
+
+        patterns = tuple()
+        nopatterns = tuple()
 
         tk = tokens.consume()
         while tk != ")":
@@ -799,32 +820,54 @@ class SmtLibParser(object):
                                        " colon! Offending token: '%s'" % tk,
                                        tokens.pos_info)
             keyword = tk[1:]
-            tk = tokens.consume()
-            value = None
-            if tk == "(":
-                counter = 1
-                buff = [tk]
-                while counter != 0:
-                    tk = tokens.raw_read()
-                    if tk == "(":
-                        counter += 1
-                    elif tk == ")":
-                        counter -= 1
-                    buff.append(tk)
-                value = "".join(buff)
-            else:
-                value = tk
-            tk = tokens.consume()
-            # ATG: Dafny produces things like (! true :qid (...) :pattern (...)) that we should skip
-            skipped_annotations = ['skolemid', 'qid']
-            if not term.is_bool_constant(True) and keyword not in skipped_annotations:
-                self.cache.annotations.add(term, keyword, value)
 
-        assert len(stack[-1]) == 0
+            if keyword == "pattern":
+                assert len(patterns) == 0  # We accept only one :pattern annotation per quantifier
+                patterns = tuple(self.parse_expr_list(tokens, "<pattern>"))
+                for pat in patterns:
+                    value = self._pattern_printer(pat)
+                    self.cache.annotations.add(term, keyword, value)
+
+            elif keyword == "no-pattern":
+                assert len(nopatterns) == 0  # We accept only one :pattern annotation per quantifier
+                nopatterns = tuple(self.parse_expr_list(tokens, "<pattern>"))
+                for pat in nopatterns:
+                    value = self._pattern_printer(pat)
+                    self.cache.annotations.add(term, keyword, value)
+
+            else:
+                tk = tokens.consume()
+                value = None
+                if tk == "(":
+                    counter = 1
+                    buff = [tk]
+                    while counter != 0:
+                        tk = tokens.raw_read()
+                        if tk == "(":
+                            counter += 1
+                        elif tk == ")":
+                            counter -= 1
+                        buff.append(tk)
+                    value = "".join(buff)
+                else:
+                    value = tk
+
+                # ATG: Dafny produces things like (! true :qid (...) :pattern (...)) that we should skip
+                skipped_annotations = ['skolemid', 'qid']
+                if not term.is_bool_constant(True) and keyword not in skipped_annotations:
+                    self.cache.annotations.add(term, keyword, value)
+
+            tk = tokens.consume()
+
+            assert len(stack[-1]) == 0
+
         # re-add the ")" to the tokenizer because we consumed it, but
         # get_expression needs it
         tokens.add_extra_token(")")
         stack[-1].append(lambda : term)
+
+        if in_quant:
+            return patterns, nopatterns
 
     def get_expression(self, tokens):
         """
