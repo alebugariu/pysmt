@@ -161,22 +161,26 @@ class SmtPrinter(TreeWalker):
         body = formula.arg(0)
         yield body
 
-        def gen_pat(ps):
-            for pat_num, pat in enumerate(ps):
-                yield pat
-                if pat_num < len(ps)-1:
+        def gen_pat(pat):
+            for term_num, term in enumerate(pat):
+                yield term
+                if term_num < len(pat)-1:
                     self.write(" ")
 
+        def gen_pats(lbl, ps):
+            for pat_num, pat in enumerate(ps):
+                self.write(" :%s (" % lbl)
+                yield from gen_pat(pat)
+                self.write(")")
+
         if len(pats) > 0:
-            self.write(" :pattern (")
-            yield from gen_pat(pats)
-            self.write(")")
+            yield from gen_pats("pattern", pats)
 
         if len(nopats) > 0:
-            self.write(" :no-pattern (")
-            yield from gen_pat(nopats)
-            self.write(")")
+            yield from gen_pats("no-pattern", nopats)
 
+        # Closing the (! ... :pattern (...) )
+        #                                   ^
         if len(pats) > 0 or len(nopats) > 0:
             self.write(" )")
 

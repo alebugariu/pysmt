@@ -810,8 +810,8 @@ class SmtLibParser(object):
 
         term = self.get_expression(tokens)
 
-        patterns = tuple()
-        nopatterns = tuple()
+        patterns = list()
+        nopatterns = list()
 
         tk = tokens.consume()
         while tk != ")":
@@ -822,18 +822,16 @@ class SmtLibParser(object):
             keyword = tk[1:]
 
             if keyword == "pattern":
-                assert len(patterns) == 0  # We accept only one :pattern annotation per quantifier
-                patterns = tuple(self.parse_expr_list(tokens, "<pattern>"))
-                for pat in patterns:
-                    value = self._pattern_printer(pat)
-                    self.cache.annotations.add(term, keyword, value)
+                multipattern = tuple(self.parse_expr_list(tokens, "<pattern>"))
+                patterns.append(multipattern)
+                value = [self._pattern_printer(pat) for pat in multipattern]
+                self.cache.annotations.add(term, keyword, value)
 
             elif keyword == "no-pattern":
-                assert len(nopatterns) == 0  # We accept only one :pattern annotation per quantifier
-                nopatterns = tuple(self.parse_expr_list(tokens, "<pattern>"))
-                for pat in nopatterns:
-                    value = self._pattern_printer(pat)
-                    self.cache.annotations.add(term, keyword, value)
+                multinopattern = tuple(self.parse_expr_list(tokens, "<no-pattern>"))
+                nopatterns.append(multinopattern)
+                value = [self._pattern_printer(pat) for pat in multinopattern]
+                self.cache.annotations.add(term, keyword, value)
 
             else:
                 tk = tokens.consume()
@@ -867,7 +865,7 @@ class SmtLibParser(object):
         stack[-1].append(lambda : term)
 
         if in_quant:
-            return patterns, nopatterns
+            return tuple(patterns), tuple(nopatterns)
 
     def get_expression(self, tokens):
         """
