@@ -173,11 +173,16 @@ class SmtPrinter(TreeWalker):
                 yield from gen_pat(pat)
                 self.write(")")
 
+        def gen_nopats(lbl, ns):
+            for nopat in ns:
+                self.write(" :%s " % lbl)
+                yield nopat
+
         if len(pats) > 0:
             yield from gen_pats("pattern", pats)
 
         if len(nopats) > 0:
-            yield from gen_pats("no-pattern", nopats)
+            yield from gen_nopats("no-pattern", nopats)
 
         # Closing the (! ... :pattern (...) )
         #                                   ^

@@ -776,7 +776,6 @@ class SmtLibParser(object):
             self.consume_closing(tokens, "expression")
             current = tokens.consume()
 
-        quant = None
         if key == 'forall':
             quant = mgr.ForAll
         else:
@@ -791,6 +790,7 @@ class SmtLibParser(object):
         stack.append([])
 
         tk = tokens.consume()
+
         if tk == "!":
             patterns, nopatterns = self._enter_annotation(stack, tokens, "!", in_quant=True)
         else:
@@ -827,10 +827,10 @@ class SmtLibParser(object):
                 value = [self._pattern_printer(pat) for pat in multipattern]
                 self.cache.annotations.add(term, keyword, value)
 
-            elif keyword == "no-pattern":
-                multinopattern = tuple(self.parse_expr_list(tokens, "<no-pattern>"))
-                nopatterns.append(multinopattern)
-                value = [self._pattern_printer(pat) for pat in multinopattern]
+            elif keyword == "no-pattern":  # Assuming there do not exist multi-no-patterns!
+                nopattern = self.get_expression(tokens)
+                nopatterns.append(nopattern)
+                value = self._pattern_printer(nopattern)
                 self.cache.annotations.add(term, keyword, value)
 
             else:
@@ -873,6 +873,7 @@ class SmtLibParser(object):
         """
         mgr = self.env.formula_manager
         stack = []
+        open_braces_counter = 0
         def push_to_stack(new_item):
             nonlocal stack
             assert not isinstance(new_item, list)
@@ -881,9 +882,13 @@ class SmtLibParser(object):
         try:
             while True:
                 tk = tokens.consume_maybe()
+                if tk.startswith(":"):
+                    tokens.add_extra_token(tk)
+                    return res
 
                 if tk == "(":
                     while tk == "(":
+                        open_braces_counter += 1
                         stack.append([])
                         tk = tokens.consume()
 
@@ -1133,9 +1138,10 @@ class SmtLibParser(object):
                                              command)
         return res
 
-    def parse_expr_list(self, tokens, command):
+    def parse_expr_list(self, tokens, command, with_surrounding_parants=True):
         """Parses a list of expressions form the tokens"""
-        self.consume_opening(tokens, command)
+        if with_surrounding_parants:
+            self.consume_opening(tokens, command)
         res = []
         while True:
             try:
