@@ -74,6 +74,7 @@ class Environment(object):
         self._factory = None
         # Configurations
         self.enable_infix_notation = False
+        self.unique_names_guarantee = False
 
         # Dynamic Walker Configuration Map
         # See: add_dynamic_walker_function
