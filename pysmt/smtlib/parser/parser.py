@@ -180,6 +180,21 @@ class Tokenizer(object):
     def add_extra_token(self, token):
         self.extra_queue.append(token)
 
+    def peek_next(self, num_tokens):
+        next_tokens = []
+
+        for _ in range(num_tokens):
+            try:
+                tk = self.consume_maybe()
+                next_tokens.append(tk)
+            except StopIteration:
+                break
+
+        for tk in next_tokens:
+            self.add_extra_token(tk)
+
+        return next_tokens
+
     def consume_maybe(self):
         """Consumes and returns a single token from the stream.
            If the stream is empty `StopIteration` is thrown"""
@@ -794,9 +809,16 @@ class SmtLibParser(object):
         if tk == "!":
             patterns, nopatterns = self._enter_annotation(stack, tokens, "!", in_quant=True)
         else:
+            tokens.add_extra_token("(")
+            tokens.add_extra_token(tk)  # put the token back as it's not a "!"
+
             patterns, nopatterns = tuple(), tuple()
             term = self.get_expression(tokens)
-            stack[-1].append(term)
+
+            # re-add the ")" to the tokenizer because we consumed it, but
+            # get_expression needs it
+            tokens.add_extra_token(")")
+            stack[-1].append(lambda : term)
 
         stack[-2].append(patterns)
         stack[-2].append(nopatterns)
@@ -822,10 +844,18 @@ class SmtLibParser(object):
             keyword = tk[1:]
 
             if keyword == "pattern":
-                multipattern = tuple(self.parse_expr_list(tokens, "<pattern>"))
-                patterns.append(multipattern)
-                value = [self._pattern_printer(pat) for pat in multipattern]
-                self.cache.annotations.add(term, keyword, value)
+                # Test if this is a multi-pattern
+                next_tokens = tokens.peek_next(2)
+                if next_tokens[0] == next_tokens[1] == "(":
+                    multipattern = tuple(self.parse_expr_list(tokens, "<pattern>"))
+                    patterns.append(multipattern)
+                    value = [self._pattern_printer(pat) for pat in multipattern]
+                    self.cache.annotations.add(term, keyword, value)
+                else:  # This is a singleton trigger
+                    pattern = self.get_expression(tokens)
+                    patterns.append((pattern,))
+                    value = self._pattern_printer(pattern)
+                    self.cache.annotations.add(term, keyword, [value])
 
             elif keyword == "no-pattern":  # Assuming there do not exist multi-no-patterns!
                 nopattern = self.get_expression(tokens)
@@ -873,7 +903,6 @@ class SmtLibParser(object):
         """
         mgr = self.env.formula_manager
         stack = []
-        open_braces_counter = 0
         def push_to_stack(new_item):
             nonlocal stack
             assert not isinstance(new_item, list)
@@ -888,7 +917,6 @@ class SmtLibParser(object):
 
                 if tk == "(":
                     while tk == "(":
-                        open_braces_counter += 1
                         stack.append([])
                         tk = tokens.consume()
 
