@@ -110,12 +110,13 @@ class FormulaManager(object):
         return n
 
     def new_fresh_symbol(self, typename, base="FV%d"):
-        count = self._fresh_guess
+        # count = self._fresh_guess
+        count = 0
         while (base % count) in self.symbols:
             count = count + 1
 
         name = (base % count)
-        self._fresh_guess = count + 1
+        #self._fresh_guess = count + 1
         v = self.Symbol(name, typename)
         assert v is not None
         return v
