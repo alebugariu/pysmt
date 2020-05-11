@@ -165,7 +165,7 @@ class FormulaManager(object):
             return formula
         return self.create_node(node_type=op.FORALL,
                                 args=(formula,),
-                                payload=(variables, patterns, nopatterns))
+                                payload=(tuple(variables), tuple(patterns), tuple(nopatterns)))
 
     def Exists(self, variables, formula, patterns=(), nopatterns=tuple()):
         """ Creates an expression of the form:

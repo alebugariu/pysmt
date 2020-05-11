@@ -152,13 +152,25 @@ class SmtPrinter(TreeWalker):
 
         self.write(") ")
 
+        body = formula.arg(0)
+
         pats = formula.quantifier_patterns()
         nopats = formula.quantifier_nopatterns()
+        if self.annotations.has_annotation(body, "qid"):
+            qids = self.annotations[body]["qid"]
+        else:
+            qids = set()
 
-        if len(pats) > 0 or len(nopats) > 0:
+        some_annotation = len(pats) + len(nopats) + len(qids) > 0
+
+        if len(qids) == 0:
+            qid = None
+        else:
+            qid = next(iter(qids))
+
+        if some_annotation:
             self.write("(! ")
 
-        body = formula.arg(0)
         yield body
 
         def gen_pat(pat):
@@ -184,9 +196,12 @@ class SmtPrinter(TreeWalker):
         if len(nopats) > 0:
             yield from gen_nopats("no-pattern", nopats)
 
+        if qid:
+            self.write(" :qid %s" % qid)
+
         # Closing the (! ... :pattern (...) )
         #                                   ^
-        if len(pats) > 0 or len(nopats) > 0:
+        if some_annotation:
             self.write(" )")
 
         self.write(")")

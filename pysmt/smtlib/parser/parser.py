@@ -345,6 +345,8 @@ class SmtLibParser(object):
 
     def __init__(self, environment=None, interactive=False):
         self.env = get_env() if environment is None else environment
+        self.env._parser = self
+
         self.interactive = interactive
 
         # Placeholders for fields filled by self._reset
@@ -828,6 +830,21 @@ class SmtLibParser(object):
     def _pattern_printer(self, pat):
         return pysmt.smtlib.printers.to_smtlib(pat, daggify=False)
 
+    def parse_pattern(self, term, keyword, tokens):
+        next_tokens = tokens.peek_next(2)
+        if next_tokens[0] == next_tokens[1] == "(":
+            multipattern = tuple(self.parse_expr_list(tokens, "<pattern>"))
+            result = multipattern
+            value = [self._pattern_printer(pat) for pat in multipattern]
+            self.cache.annotations.add(term, keyword, value)
+        else:  # This is a singleton trigger
+            pattern = self.get_expression(tokens)
+            result = (pattern,)
+            value = self._pattern_printer(pattern)
+            self.cache.annotations.add(term, keyword, [value])
+
+        return result
+
     def _enter_annotation(self, stack, tokens, key, in_quant=False):
         """Deals with annotations"""
         #pylint: disable=unused-argument
@@ -1169,7 +1186,7 @@ class SmtLibParser(object):
         return res
 
     def parse_expr_list(self, tokens, command, with_surrounding_parants=True):
-        """Parses a list of expressions form the tokens"""
+        """Parses a list of expressions from the tokens"""
         if with_surrounding_parants:
             self.consume_opening(tokens, command)
         res = []

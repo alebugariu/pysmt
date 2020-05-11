@@ -58,6 +58,8 @@ class Environment(object):
     def __init__(self):
         self._stc = self.TypeCheckerClass(self)
         self._formula_manager = self.FormulaManagerClass(self)
+        self._parser = None  # To be initialized by the parser
+
         # NOTE: Both Simplifier and Substituter keep an internal copy
         # of the Formula Manager and need to be initialized afterwards
         self._simplifier = self.SimplifierClass(self)
