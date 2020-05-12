@@ -180,7 +180,7 @@ class Tokenizer(object):
     def add_extra_token(self, token):
         self.extra_queue.append(token)
 
-    def peek_next(self, num_tokens):
+    def peek_next(self, num_tokens=1):
         next_tokens = []
 
         for _ in range(num_tokens):
@@ -193,7 +193,12 @@ class Tokenizer(object):
         for tk in next_tokens:
             self.add_extra_token(tk)
 
-        return next_tokens
+        if len(next_tokens) == 0:
+            return None
+        elif num_tokens == 1:
+            return next_tokens[0]
+        else:
+            return next_tokens
 
     def consume_maybe(self):
         """Consumes and returns a single token from the stream.
@@ -830,6 +835,13 @@ class SmtLibParser(object):
     def _pattern_printer(self, pat):
         return pysmt.smtlib.printers.to_smtlib(pat, daggify=False)
 
+    def parse_inferred_patterns(self, term, keyword, tokens):
+        mpats = tuple(self.parse_double_expr_list(tokens, "<auto-pattern>"))
+        for multipattern in mpats:
+            value = [self._pattern_printer(pat) for pat in multipattern]
+            self.cache.annotations.add(term, keyword, value)
+        return mpats
+
     def parse_pattern(self, term, keyword, tokens):
         next_tokens = tokens.peek_next(2)
         if next_tokens[0] == next_tokens[1] == "(":
@@ -1185,10 +1197,9 @@ class SmtLibParser(object):
                                              command)
         return res
 
-    def parse_expr_list(self, tokens, command, with_surrounding_parants=True):
+    def parse_expr_list(self, tokens, command):
         """Parses a list of expressions from the tokens"""
-        if with_surrounding_parants:
-            self.consume_opening(tokens, command)
+        self.consume_opening(tokens, command)
         res = []
         while True:
             try:
@@ -1196,6 +1207,16 @@ class SmtLibParser(object):
                 res.append(current)
             except PysmtSyntaxError:
                 return res
+
+    def parse_double_expr_list(self, tokens, command):
+        """Parses a list of lists of expressions from the tokens"""
+        res = []
+        tk = tokens.peek_next()
+        while tk and tk == '(':
+            current = self.parse_expr_list(tokens, command)
+            res.append(tuple(current))
+            tk = tokens.peek_next()
+        return tuple(res)
 
     def consume_opening(self, tokens, command):
         """ Consumes a single '(' """
