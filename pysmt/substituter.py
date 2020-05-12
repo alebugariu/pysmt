@@ -70,27 +70,63 @@ class Substituter(pysmt.walkers.IdentityDagWalker):
 
         # Deal with quantifiers
         if formula.is_quantifier():
-            # 1. We create a new substitution in which we remove the
-            #    bound variables from the substitution map
-            substitutions = kwargs["substitutions"]
-            new_subs = {}
-            for k,v in iteritems(substitutions):
-                # If at least one bound variable is in the cone of k,
-                # we do not consider this substitution in the body of
-                # the quantifier.
-                if all(m not in formula.quantifier_vars()
-                       for m in k.get_free_variables()):
-                    new_subs[k] = v
 
-            # 2. We apply the substitution on the quantifier body with
-            #    the new 'reduced' map
+            substitutions = kwargs["substitutions"]
             sub = self.__class__(self.env)
+
+            # Propagate quantified substitutions
+            new_subs = {k: v for k, v in substitutions.items() if v.is_quantifier()}
+            res_pats = []
+            res_nopats = []
+
+            if formula in substitutions and substitutions[formula].is_quantifier():
+                # 0. Full quantifier substitution
+                sub_formula = substitutions[formula]
+
+                # Clone the patterns from substituted quantifiers
+                for mpat in sub_formula.quantifier_patterns():
+                    res_mpat = []
+                    for pat in mpat:
+                        res_pat = sub.substitute(pat, new_subs)
+                        res_mpat.append(res_pat)
+                    res_pats.append(tuple(res_mpat))
+
+                for nopat in sub_formula.quantifier_nopatterns():
+                    res_nopat = sub.substitute(nopat, new_subs)
+                    res_nopats.append(res_nopat)
+
+            else:
+                # 1. We create a new substitution in which we remove the
+                #    bound variables from the substitution map
+
+                for k, v in iteritems(substitutions):
+                    # If at least one bound variable is in the cone of k,
+                    # we do not consider this substitution in the body of
+                    # the quantifier.
+                    if all(m not in formula.quantifier_vars()
+                           for m in k.get_free_variables()):
+                        new_subs[k] = v
+
+                # save the patterns that are not affected by the substitution
+                for mpat in formula.quantifier_patterns():
+                    res_mpat = []
+                    for pat in mpat:
+                        res_pat = sub.substitute(pat, new_subs)
+                        res_mpat.append(res_pat)
+                    res_pats.append(tuple(res_mpat))
+
+                for nopat in formula.quantifier_nopatterns():
+                    res_nopat = sub.substitute(nopat, new_subs)
+                    res_nopats.append(res_nopat)
+
+            # 2. We apply the substitution on the quantifier body
+            #     (as well as patterns, no-patterns) with the new 'reduced' map
             res_formula = sub.substitute(formula.arg(0), new_subs)
 
             # 3. We invoke the relevant function (walk_exists or
             #    walk_forall) to compute the substitution
             fun = self.functions[formula.node_type()]
-            res = fun(formula, args=[res_formula], **kwargs)
+            res = fun(formula, args=[res_formula, tuple(res_pats), tuple(res_nopats)], **kwargs)
 
             # 4. We memoize the result
             key = self._get_key(formula, **kwargs)
@@ -158,7 +194,7 @@ class MGSubstituter(Substituter):
         else:
             qvars = [pysmt.walkers.IdentityDagWalker.walk_symbol(self, v, args, **kwargs)
                      for v in formula.quantifier_vars()]
-            res = self.mgr.ForAll(qvars, args[0])
+            res = self.mgr.ForAll(qvars, args[0], args[1], args[2])
         return res
 
     def walk_exists(self, formula, args, **kwargs):
