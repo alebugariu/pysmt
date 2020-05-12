@@ -120,13 +120,13 @@ class FNode(object):
         """Return a simplified version of the formula."""
         return _env().simplifier.simplify(self)
 
-    def substitute(self, subs):
+    def substitute(self, subs, substitute_qvars=False):
         """Return a formula in which subformula have been substituted.
 
         subs is a dictionary mapping terms to be subtituted with their
         substitution.
         """
-        return _env().substituter.substitute(self, subs=subs)
+        return _env().substituter.substitute(self, subs=subs, substitute_qvars=substitute_qvars)
 
     def size(self, measure=None):
         """Return the size of the formula according to the given metric.
