@@ -245,3 +245,81 @@ class IdentityDagWalker(DagWalker):
 
     def walk_mod(self, formula, args, **kwargs):
         return self.mgr.Mod(args[0], args[1])
+
+    def walk_int_div(self, formula, args, **kwargs):
+        return self.mgr.IntDiv(args[0], args[1])
+
+    def walk_not_equals(self, formula, args, **kwargs):
+        return self.mgr.NotEquals(args[0], args[1])
+
+    def walk_ge(self, formula, args, **kwargs):
+        return self.mgr.GE(args[0], args[1])
+
+    def walk_gt(self, formula, args, **kwargs):
+        return self.mgr.GT(args[0], args[1])
+
+    def walk_realtoint(self, formula, args, **kwargs):
+        return self.mgr.RealToInt(formula)
+
+    def walk_ceiling(self, formula, args, **kwargs):
+        return self.mgr.Ceiling(formula)
+
+    def walk_truncate(self, formula, args, **kwargs):
+        return self.mgr.Truncate(formula)
+
+    def walk_at_most_one(self, formula, args, **kwargs):
+        return self.mgr.AtMostOne(args)
+
+    def walk_exactly_one(self, formula, args, **kwargs):
+        return self.mgr.ExactlyOne(args)
+
+    def walk_all_different(self, formula, args, **kwargs):
+        return self.mgr.AllDifferent(args)
+
+    def walk_xor(self, formula, args, **kwargs):
+        return self.mgr.Xor(args[0], args[1])
+
+    def walk_max(self, formula, args, **kwargs):
+        return self.mgr.Max(args)
+
+    def walk_equals_or_iff(self, formula, args, **kwargs):
+        return self.mgr.EqualsOrIff(args[0], args[1])
+
+    def walk_sbv(self, formula, args, **kwargs):
+        return self.mgr.SBV(args[0], args[1])
+
+    def walk_bv_one(self, formula, args, **kwargs):
+        return self.mgr.BVOne(args[0])
+
+    def walk_bv_zero(self, formula, args, **kwargs):
+        return self.mgr.BVZero(args[0])
+
+    def walk_bv_ugt(self, formula, args, **kwargs):
+        return self.mgr.BVUGT(args[0], args[1])
+
+    def walk_bv_uge(self, formula, args, **kwargs):
+        return self.mgr.BVUGE(args[0], args[1])
+
+    def walk_bv_nand(self, formula, args, **kwargs):
+        return self.mgr.BVNand(args[0], args[1])
+
+    def walk_bv_nor(self, formula, args, **kwargs):
+        return self.mgr.BVNor(args[0], args[1])
+
+    def walk_bv_xnor(self, formula, args, **kwargs):
+        return self.mgr.BVXnor(args[0], args[1])
+
+    def walk_bv_sgt(self, formula, args, **kwargs):
+        return self.mgr.BVSGT(args[0], args[1])
+
+    def walk_bv_sge(self, formula, args, **kwargs):
+        return self.mgr.BVSGE(args[0], args[1])
+
+    def walk_bv_smod(self, formula, args, **kwargs):
+        return self.mgr.BVSMod(args[0], args[1])
+
+    def walk_bv_repeat(self, formula, args, **kwargs):
+        return self.mgr.BVRepeat(formula, args[0])
+
+    def walk_algebraic_constant(self, formula, args, **kwargs):
+        return self.mgr._Algebraic(args[0])

@@ -25,7 +25,7 @@ from itertools import chain
 
 from six.moves import xrange
 
-ALL_TYPES = list(xrange(0, 70))
+ALL_TYPES = list(xrange(0, 92))
 
 (
 FORALL, EXISTS, AND, OR, NOT, IMPLIES, IFF, # Boolean Logic (0-6)
@@ -83,11 +83,36 @@ BV_TONATURAL,                               # BV to Natural Conversion (66)
 REALTOINT,                                  # Real to Integer Conversion (67)
 MOD,                                        # Integer Modulo (68)
 INT_TO_BV,                                  # Integer to BV Conversion (69)
+#
+# NEWLY ADDED
+#
+NOT_EQUALS,
+CEILING,
+TRUNCATE,
+AT_MOST_ONE,
+EXACTLY_ONE,
+ALL_DIFFERENT,
+XOR,
+MIN,
+MAX,
+EQUALS_OR_IFF,
+SBV_CONSTANT,
+BV_ONE,
+BV_ZERO,
+BV_UGT,
+BV_UGE,
+BV_NAND,
+BV_NOR,
+BV_XNOR,
+BV_SGT,
+BV_SGE,
+BV_SMOD,
+BV_REPEAT
 ) = ALL_TYPES
 
 QUANTIFIERS = frozenset([FORALL, EXISTS])
 
-BOOL_CONNECTIVES = frozenset([AND, OR, NOT, IMPLIES, IFF])
+BOOL_CONNECTIVES = frozenset([AND, OR, NOT, IMPLIES, IFF, XOR, AT_MOST_ONE, EXACTLY_ONE, ALL_DIFFERENT,])
 
 BOOL_OPERATORS = frozenset(QUANTIFIERS | BOOL_CONNECTIVES)
 
@@ -96,13 +121,13 @@ CONSTANTS = frozenset([BOOL_CONSTANT, REAL_CONSTANT, INT_CONSTANT,
 
 # Relations are predicates on theory atoms.
 # Relations have boolean type. They are a subset of the operators for a theory
-BV_RELATIONS = frozenset([BV_ULE, BV_ULT, BV_SLT, BV_SLE])
+BV_RELATIONS = frozenset([BV_ULE, BV_ULT, BV_SLT, BV_SLE, BV_UGT, BV_UGE, BV_NAND, BV_NOR, BV_XNOR, BV_SGT, BV_SGE, BV_SMOD])
 
 IRA_RELATIONS = frozenset([LE, LT])
 
 STR_RELATIONS = frozenset([STR_CONTAINS, STR_PREFIXOF, STR_SUFFIXOF])
 
-RELATIONS = frozenset((EQUALS,)) | BV_RELATIONS | IRA_RELATIONS | STR_RELATIONS
+RELATIONS = frozenset((EQUALS, NOT_EQUALS, EQUALS_OR_IFF)) | BV_RELATIONS | IRA_RELATIONS | STR_RELATIONS
 
 # Operators are functions that return a Theory object
 BV_OPERATORS = frozenset([BV_NOT, BV_AND, BV_OR, BV_XOR,
@@ -110,13 +135,13 @@ BV_OPERATORS = frozenset([BV_NOT, BV_AND, BV_OR, BV_XOR,
                           BV_SUB, BV_MUL, BV_UDIV, BV_UREM, BV_LSHL, BV_LSHR,
                           BV_ROL, BV_ROR, BV_ZEXT, BV_SEXT,
                           BV_COMP, BV_SDIV, BV_SREM, BV_ASHR,
-                          INT_TO_BV])
+                          INT_TO_BV, BV_REPEAT, SBV_CONSTANT, BV_ONE, BV_ZERO,])
 
 STR_OPERATORS = frozenset([STR_LENGTH, STR_CONCAT, STR_INDEXOF, STR_REPLACE,
                            STR_SUBSTR, STR_CHARAT, INT_TO_STR,])
 
 IRA_OPERATORS = frozenset([PLUS, MINUS, TIMES, TOREAL, DIV, INT_DIV, POW, BV_TONATURAL,
-                          REALTOINT, MOD, STR_TO_INT])
+                          REALTOINT, MOD, STR_TO_INT, MIN, MAX, CEILING, TRUNCATE])
 
 ARRAY_OPERATORS = frozenset([ARRAY_SELECT, ARRAY_STORE, ARRAY_VALUE])
 
@@ -233,4 +258,26 @@ __OP_STR__ = {
     ALGEBRAIC_CONSTANT: "ALGEBRAIC_CONSTANT",
     REALTOINT : "REALTOINT",
     MOD: "MOD",
+    NOT_EQUALS: "NOT_EQUALS",
+    CEILING: "CEILING",
+    TRUNCATE: "TRUNCATE",
+    AT_MOST_ONE: "AT_MOST_ONE",
+    EXACTLY_ONE: "EXACTLY_ONE",
+    ALL_DIFFERENT: "ALL_DIFFERENT",
+    XOR: "XOR",
+    MIN: "MIN",
+    MAX: "MAX",
+    EQUALS_OR_IFF: "EQUALS_OR_IFF",
+    SBV_CONSTANT: "SBV_CONSTANT",
+    BV_ONE: "BV_ONE",
+    BV_ZERO: "BV_ZERO",
+    BV_UGT: "BV_UGT",
+    BV_UGE: "BV_UGE",
+    BV_NAND: "BV_NAND",
+    BV_NOR: "BV_NOR",
+    BV_XNOR: "BV_XNOR",
+    BV_SGT: "BV_SGT",
+    BV_SGE: "BV_SGE",
+    BV_SMOD: "BV_SMOD",
+    BV_REPEAT: "BV_REPEAT",
 }
