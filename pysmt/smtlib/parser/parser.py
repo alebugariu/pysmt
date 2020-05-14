@@ -346,7 +346,7 @@ class SmtLibParser(object):
     for example with a SMT-Lib2-compliant solver
     """
 
-    TOKEN_ALPHABET = """%@#abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_!'.-"""
+    TOKEN_ALPHABET = "%@#abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_!<>='.-"
 
     def __init__(self, environment=None, interactive=False):
         self.env = get_env() if environment is None else environment
@@ -805,12 +805,21 @@ class SmtLibParser(object):
         else:
             quant = mgr.Exists
 
+        tk = tokens.consume()
+        if tk != "(":
+            # We have (forall (...) true) or (forall (...) false)
+            const_body = tk
+            tk = tokens.consume()
+            assert tk == ")"
+            tokens.add_extra_token(const_body)
+            for vname, _ in vrs:
+                self.cache.unbind(vname)
+            return
+
         stack[-1].append(self._exit_quantifier)
         stack[-1].append(quant)
         stack[-1].append(vrs)
 
-        tk = tokens.consume()
-        assert tk == "("
         stack.append([])
 
         tk = tokens.consume()
