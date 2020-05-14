@@ -346,7 +346,7 @@ class SmtLibParser(object):
     for example with a SMT-Lib2-compliant solver
     """
 
-    TOKEN_ALPHABET = "%@#abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_!<>='.-"
+    TOKEN_ALPHABET = "%@#abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_!?<>=+'.-"
 
     def __init__(self, environment=None, interactive=False):
         self.env = get_env() if environment is None else environment
@@ -748,6 +748,11 @@ class SmtLibParser(object):
             variables.append(var)
         return fun(tuple(variables), body, patterns, nopatterns)
 
+    def _exit_reducible_quantifier(self, vrs, term):
+        for vname, var in vrs:
+            self.cache.unbind(vname)
+        return term
+
     def _enter_let(self, stack, tokens, key):
         """Handles a let expression by recurring on the expression and
         updating the cache
@@ -809,11 +814,15 @@ class SmtLibParser(object):
         if tk != "(":
             # We have (forall (...) true) or (forall (...) false)
             const_body = tk
-            tk = tokens.consume()
-            assert tk == ")"
-            tokens.add_extra_token(const_body)
-            for vname, _ in vrs:
-                self.cache.unbind(vname)
+
+            stack[-1].append(self._exit_reducible_quantifier)
+            stack[-1].append(vrs)
+            stack.append([])
+
+            term = self.atom(const_body, mgr)
+            stack[-1].append(lambda: term)
+
+            tokens.add_extra_token(")")  # close the quantifier
             return
 
         stack[-1].append(self._exit_quantifier)
