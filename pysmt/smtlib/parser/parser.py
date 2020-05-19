@@ -1313,6 +1313,7 @@ class SmtLibParser(object):
             named_annotation = annotations["named"]
             assert len(named_annotation) == 1, "one assertion cannot have multiple names"
             named_annotation = next(iter(named_annotation))
+            self.cache.annotations.remove_annotation(expr, "named")
         else:
             named_annotation = None
         self.consume_closing(tokens, current)
