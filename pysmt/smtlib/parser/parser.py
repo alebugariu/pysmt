@@ -1308,8 +1308,15 @@ class SmtLibParser(object):
     def _cmd_assert(self, current, tokens):
         """(assert <term>)"""
         expr = self.get_expression(tokens)
+        annotations = self.cache.annotations[expr]
+        if annotations and "named" in annotations:
+            named_annotation = annotations["named"]
+            assert len(named_annotation) == 1, "one assertion cannot have multiple names"
+            named_annotation = next(iter(named_annotation))
+        else:
+            named_annotation = None
         self.consume_closing(tokens, current)
-        return SmtLibCommand(current, [expr])
+        return SmtLibCommand(current, [expr], named_annotation)
 
     def _cmd_check_sat(self, current, tokens):
         """(check-sat)"""

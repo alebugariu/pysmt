@@ -41,7 +41,8 @@ def check_sat_filter(log):
     return filtered[0][1]
 
 
-class SmtLibCommand(namedtuple('SmtLibCommand', ['name', 'args'])):
+class SmtLibCommand(namedtuple('SmtLibCommand', ['name', 'args', 'named_annotation'], defaults=(None,))):
+
     def serialize(self, outstream=None, printer=None, daggify=True):
         """Serializes the SmtLibCommand into outstream using the given printer.
 
@@ -75,12 +76,11 @@ class SmtLibCommand(namedtuple('SmtLibCommand', ['name', 'args'])):
         elif self.name == smtcmd.ASSERT:
             outstream.write("(%s " % self.name)
             assertion = self.args[0]
-            annotations_for_assertion = printer.annotations[assertion]
-            if annotations_for_assertion is not None and 'named' in annotations_for_assertion.keys():
-                (assertion_name, ) = annotations_for_assertion['named']
+
+            if self.named_annotation:
                 outstream.write("(! ")
                 printer.printer(assertion)
-                outstream.write(" :named " + assertion_name + ")")
+                outstream.write(" :named " + self.named_annotation + ")")
             else:
                 printer.printer(assertion)
             outstream.write(")")
@@ -158,10 +158,11 @@ class SmtLibScript(object):
         self.annotations = None
         self.commands = []
 
-    def add(self, name, args):
+    def add(self, name, args, named_annotation=None):
         """Adds a new SmtLibCommand with the given name and arguments."""
         self.add_command(SmtLibCommand(name=name,
-                                       args=args))
+                                       args=args,
+                                       named_annotation=named_annotation))
 
     def add_command(self, command):
         self.commands.append(command)
