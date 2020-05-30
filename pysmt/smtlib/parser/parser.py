@@ -1033,12 +1033,12 @@ class SmtLibParser(object):
         return res
 
     def get_command_generator(self, script):
-        """Returns a python generator of SmtLibCommand's given a file object
+        """
+        Returns a python generator of SmtLibCommand's given a file object
         to read from
 
         This function can be used interactively, and blocks until a
         whole command is read from the script.
-
         """
         tokens = Tokenizer(script, interactive=self.interactive)
         for cmd in self.get_command(tokens):
