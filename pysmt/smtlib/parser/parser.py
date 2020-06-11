@@ -346,7 +346,7 @@ class SmtLibParser(object):
     for example with a SMT-Lib2-compliant solver
     """
 
-    TOKEN_ALPHABET = "%@#abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_!?<>=+.-"
+    TOKEN_ALPHABET = "%@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_!?<>=+.-"
 
     def __init__(self, environment=None, interactive=False):
         self.env = get_env() if environment is None else environment
