@@ -981,7 +981,14 @@ class SmtLibParser(object):
                                 if list(fun.get_type().param_types) == arg_type_list:
                                     fun_app = mgr.create_node(FUNCTION, args=tuple(args), payload=fun)
                                     return fun_app
-                            raise PysmtSyntaxError("None of the declared functions match expected type signature")
+                            raise PysmtSyntaxError("None of the declared functions match expected type signature. "
+                                                   "This is either a poorly-typed formula, a missed function "
+                                                   "declaration, an unsupported built-in function, "
+                                                   "or a bug in the parser. Function name `%s`, provided args: `%s`,"
+                                                   " available functions with this name have signatures: %s"
+                                                   % (str(fun),
+                                                      ", ".join(map(lambda a: "%s:%s"%(str(a),str(a.get_type())),args)),
+                                                      ", ".join(map(lambda f: str(f.get_type()), fun_list))))
 
                         if tk in mgr.symbols:
                             a = lambda *args, tk=tk: get_function_for_args(tk, list(args))
