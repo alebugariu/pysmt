@@ -179,7 +179,7 @@ class FormulaManager(object):
             return formula
         return self.create_node(node_type=op.EXISTS,
                                 args=(formula,),
-                                payload=(variables, patterns, nopatterns))
+                                payload=(tuple(variables), tuple(patterns), tuple(nopatterns)))
 
     def Function(self, vname, params):
         """Returns the function application of vname to params.
