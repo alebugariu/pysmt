@@ -148,3 +148,7 @@ class PysmtSyntaxError(PysmtException, SyntaxError):
 
 class PysmtIOError(PysmtException, IOError):
     pass
+
+
+class PysmtAnnotationsError(PysmtException):
+    pass

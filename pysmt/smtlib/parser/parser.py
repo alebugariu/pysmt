@@ -27,7 +27,7 @@ import pysmt
 import pysmt.smtlib.commands as smtcmd
 from pysmt.constants import Fraction
 from pysmt.environment import get_env
-from pysmt.exceptions import PysmtTypeError
+from pysmt.exceptions import PysmtTypeError, PysmtAnnotationsError
 from pysmt.exceptions import UnknownSmtLibCommandError, PysmtSyntaxError
 from pysmt.fnode import FNode
 from pysmt.logics import get_logic_by_name, UndefinedLogicError, ALL
@@ -1318,7 +1318,8 @@ class SmtLibParser(object):
         annotations = self.cache.annotations[expr]
         if annotations and "named" in annotations:
             named_annotation = annotations["named"]
-            assert len(named_annotation) == 1, "one assertion cannot have multiple names"
+            if len(named_annotation) > 1:
+                raise PysmtAnnotationsError("one assertion cannot have multiple names")
             named_annotation = next(iter(named_annotation))
             self.cache.annotations.remove_annotation(expr, "named")
         else:
