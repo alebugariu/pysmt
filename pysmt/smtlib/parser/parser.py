@@ -463,7 +463,7 @@ class SmtLibParser(object):
                             'str.len':self._operator_adapter(mgr.StrLength),
                             'str.++':self._operator_adapter(mgr.StrConcat),
                             'str.at':self._operator_adapter(mgr.StrCharAt),
-                            'str.contains':self._operator_adapter(mgr.StrContains),
+                            'str.contained':self._operator_adapter(mgr.StrContains),
                             'str.indexof':self._operator_adapter(mgr.StrIndexOf),
                             'str.replace':self._operator_adapter(mgr.StrReplace),
                             'str.substr':self._operator_adapter(mgr.StrSubstr),
@@ -812,22 +812,25 @@ class SmtLibParser(object):
 
         tk = tokens.consume()
         if tk != "(":
-            # We have (forall (...) true) or (forall (...) false)
-            const_body = tk
+            # We have (forall (...) true) or (forall (...) false) or forall (...) quantified_variable
+            tokens.add_extra_token(tk)  # put the token back as it's not a "("
+            if tk == 'true' or tk == 'false':
+                const_body = tk
 
-            stack[-1].append(self._exit_reducible_quantifier)
-            stack[-1].append(vrs)
-            stack.append([])
+                stack[-1].append(self._exit_reducible_quantifier)
+                stack[-1].append(vrs)
+                stack.append([])
 
-            term = self.atom(const_body, mgr)
-            stack[-1].append(lambda: term)
+                term = self.atom(const_body, mgr)
+                stack[-1].append(lambda: term)
 
-            tokens.add_extra_token(")")  # close the quantifier
-            return
+                tokens.add_extra_token(")")  # close the quantifier
+                return
 
         stack[-1].append(self._exit_quantifier)
         stack[-1].append(quant)
         stack[-1].append(vrs)
+        qvar_names = [vname for vname, _ in vrs]
 
         stack.append([])
 
@@ -836,7 +839,8 @@ class SmtLibParser(object):
         if tk == "!":
             patterns, nopatterns = self._enter_annotation(stack, tokens, "!", in_quant=True)
         else:
-            tokens.add_extra_token("(")
+            if tk not in qvar_names:  # a quantified variable has no ()
+                tokens.add_extra_token("(")
             tokens.add_extra_token(tk)  # put the token back as it's not a "!"
 
             patterns, nopatterns = tuple(), tuple()
