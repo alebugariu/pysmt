@@ -364,7 +364,6 @@ class Simplifier(pysmt.walkers.DagWalker):
         new_args = sorted(new_args, key=FNode.node_id)
         return self.manager.Times(new_args)
 
-
     def walk_pow(self, formula, args, **kwargs):
         if args[0].is_real_constant():
             l = args[0].constant_value()
@@ -1001,6 +1000,25 @@ class Simplifier(pysmt.walkers.DagWalker):
                 return sl
 
         return self.manager.Div(sl, sr)
+
+    def walk_mod(self, formula, args, **kwargs):
+        sl = args[0]
+        sr = args[1]
+
+        if sl.is_constant() and sr.is_constant():
+            l = sl.constant_value()
+            r = sr.constant_value()
+            if sl.is_real_constant():
+                return self.manager.Real(l % r)
+            else:
+                assert sl.is_int_constant()
+                return self.manager.Int(l % r)
+
+        if sl.is_constant():
+            if sl.is_zero() or sl.is_one():
+                return sl
+
+        return self.manager.Mod(sl, sr)
 
     @handles(op.SYMBOL)
     @handles(op.REAL_CONSTANT, op.INT_CONSTANT, op.BOOL_CONSTANT)
