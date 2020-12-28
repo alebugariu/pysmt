@@ -78,6 +78,8 @@ class Environment(object):
         self.enable_infix_notation = False
         self.unique_names_guarantee = False
 
+        self.keep_qvar_names = False
+
         # Dynamic Walker Configuration Map
         # See: add_dynamic_walker_function
         self.dwf = {}
