@@ -266,7 +266,8 @@ class Simplifier(pysmt.walkers.DagWalker):
         if len(varset) == 0:
             return sf
 
-        return self.manager.ForAll(varset, sf)
+        return self.manager.ForAll(varset, sf, patterns=formula.quantifier_patterns(),
+                                   nopatterns=formula.quantifier_nopatterns())
 
     def walk_exists(self, formula, args, **kwargs):
         assert len(args) == 1
