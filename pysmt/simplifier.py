@@ -15,7 +15,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+from typing import Set
+
 from six.moves import xrange
+from sortedcontainers import SortedSet
 
 import pysmt.walkers
 from pysmt.walkers import handles
@@ -84,7 +87,7 @@ class Simplifier(pysmt.walkers.DagWalker):
         if len(args) == 2 and args[0] == args[1]:
             return args[0]
 
-        new_args = set()
+        new_args: Set[FNode] = SortedSet(key=lambda x: True)
         for a in args:
             if a.is_true():
                 continue
@@ -111,7 +114,7 @@ class Simplifier(pysmt.walkers.DagWalker):
         if len(args) == 2 and args[0] == args[1]:
             return args[0]
 
-        new_args = set()
+        new_args: Set[FNode] = SortedSet(key=lambda x: True)
         for a in args:
             if a.is_false():
                 continue
