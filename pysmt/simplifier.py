@@ -102,6 +102,8 @@ class Simplifier(pysmt.walkers.DagWalker):
                     new_args.add(s)
             else:
                 if self.walk_not(self.manager.Not(a), [a]) in new_args:
+                    conflicting_nodes: List[FNode] = {a, self.manager.Not(a)}
+                    kwargs["conflicting_nodes"] += conflicting_nodes
                     return self.manager.FALSE()
                 new_args.add(a)
 
