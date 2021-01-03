@@ -17,6 +17,7 @@
 #
 """FNode are the building blocks of formulae."""
 import collections
+from typing import List
 
 import pysmt
 import pysmt.smtlib
@@ -116,9 +117,9 @@ class FNode(object):
         """Return the set of atoms appearing in the formula."""
         return _env().ao.get_atoms(self)
 
-    def simplify(self):
+    def simplify(self, conflicting_nodes: List['FNode']=[]):
         """Return a simplified version of the formula."""
-        return _env().simplifier.simplify(self)
+        return _env().simplifier.simplify(self, conflicting_nodes=conflicting_nodes)
 
     def substitute(self, subs, substitute_qvars=False):
         """Return a formula in which subformula have been substituted.

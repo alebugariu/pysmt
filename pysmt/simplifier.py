@@ -15,7 +15,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typing import Set
+from typing import Set, List
 
 from six.moves import xrange
 from sortedcontainers import SortedSet
@@ -57,9 +57,9 @@ class Simplifier(pysmt.walkers.DagWalker):
 
         self._validate_simplifications = value
 
-    def simplify(self, formula):
+    def simplify(self, formula, conflicting_nodes: List[FNode]=[]):
         """Performs simplification of the given formula."""
-        return self.walk(formula)
+        return self.walk(formula, conflicting_nodes=conflicting_nodes)
 
     def _get_key(self, formula, **kwargs):
         return formula
@@ -96,6 +96,8 @@ class Simplifier(pysmt.walkers.DagWalker):
             if a.is_and():
                 for s in a.args():
                     if self.walk_not(self.manager.Not(s), [s]) in new_args:
+                        conflicting_nodes: List[FNode] = {s, self.manager.Not(s)}
+                        kwargs["conflicting_nodes"] += conflicting_nodes
                         return self.manager.FALSE()
                     new_args.add(s)
             else:
