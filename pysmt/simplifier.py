@@ -15,7 +15,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typing import Set, List
+from typing import Set, List, Callable
 
 from six.moves import xrange
 from sortedcontainers import SortedSet
@@ -264,11 +264,32 @@ class Simplifier(pysmt.walkers.DagWalker):
             return self.manager.Bool(l < r)
         return self.manager.LT(sl, sr)
 
+    def used_in_trigger(self, qvar: FNode, multi_triggers) -> bool:
+        for multi_trig in multi_triggers:
+            for trig in multi_trig:
+                if self.ast_contains(trig, lambda x: x == qvar):
+                    return True
+        return False
+
+    def ast_contains(self, node: FNode, what: Callable[[FNode], bool]) -> bool:
+        if what(node):
+            return True
+        for child in node.args():
+            if self.ast_contains(child, what):
+                return True
+        return False
+
     def walk_forall(self, formula, args, **kwargs):
         assert len(args) == 1
         sf = args[0]
 
-        varset = set(formula.quantifier_vars()).intersection(sf.get_free_variables())
+        varset: Set[FNode] = SortedSet(key=lambda x: x)
+        free_vars = sf.get_free_variables()
+
+        for qvar in formula.quantifier_vars():
+            if qvar in free_vars or self.used_in_trigger(qvar, formula.quantifier_patterns()) or \
+                                    self.used_in_trigger(qvar, formula.quantifier_nopatterns()):
+                varset.add(qvar)
 
         if len(varset) == 0:
             return sf
@@ -280,12 +301,19 @@ class Simplifier(pysmt.walkers.DagWalker):
         assert len(args) == 1
         sf = args[0]
 
-        varset = set(formula.quantifier_vars()).intersection(sf.get_free_variables())
+        varset: Set[FNode] = SortedSet(key=lambda x: x)
+        free_vars = sf.get_free_variables()
+
+        for qvar in formula.quantifier_vars():
+            if qvar in free_vars or self.used_in_trigger(qvar, formula.quantifier_patterns()) or \
+                    self.used_in_trigger(qvar, formula.quantifier_nopatterns()):
+                varset.add(qvar)
 
         if len(varset) == 0:
             return sf
 
-        return self.manager.Exists(varset, sf)
+        return self.manager.Exists(varset, sf, patterns=formula.quantifier_patterns(),
+                                   nopatterns=formula.quantifier_nopatterns())
 
     def walk_plus(self, formula, args, **kwargs):
         is_real = any(x.is_real_constant() for x in args)
