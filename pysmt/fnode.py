@@ -74,7 +74,7 @@ class FNode(object):
     FormulaManager it belongs.
     """
     __slots__ = ["_content", "_node_id",
-                 "_cached_representation", "_is_fun_application", "_is_symbol", "_function_name"]
+                 "_cached_representation", "_is_fun_application", "_is_symbol", "_function_name", "_original"]
 
     def __init__(self, content, node_id):
         self._content = content
@@ -85,6 +85,7 @@ class FNode(object):
         self._function_name = None
         if self._is_fun_application:
             self._function_name = self._content.payload._content.payload[0]
+        self._original = None  # original none, before simplification
         return
 
     # __eq__ is left as default while __hash__ uses the node id. This
@@ -117,9 +118,16 @@ class FNode(object):
         """Return the set of atoms appearing in the formula."""
         return _env().ao.get_atoms(self)
 
-    def simplify(self, conflicting_nodes: List['FNode']=[]):
+    def simplify(self):
         """Return a simplified version of the formula."""
-        return _env().simplifier.simplify(self, conflicting_nodes=conflicting_nodes)
+        return _env().simplifier.simplify(self)
+
+    def simplify_conflict(self):
+        """Return a simplified version of the formula,
+         together with pairs of conflicting nodes, if the formula is false."""
+        conflicting_nodes: List['FNode'] = []
+        res = _env().simplifier.simplify(self, conflicting_nodes=conflicting_nodes)
+        return res, conflicting_nodes
 
     def substitute(self, subs, substitute_qvars=False):
         """Return a formula in which subformula have been substituted.

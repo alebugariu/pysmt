@@ -15,7 +15,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-from typing import Set, List, Callable
+from collections import OrderedDict
+from typing import Set, List, Callable, Dict
 
 from six.moves import xrange
 from sortedcontainers import SortedSet
@@ -37,6 +38,7 @@ class Simplifier(pysmt.walkers.DagWalker):
         self.manager = self.env.formula_manager
         self._validate_simplifications = None
         self.original_walk = self.walk
+        self.cached_conflicting_nodes: Dict[FNode, List[FNode]] = OrderedDict()
 
     @property
     def validate_simplifications(self):
@@ -59,7 +61,10 @@ class Simplifier(pysmt.walkers.DagWalker):
 
     def simplify(self, formula, conflicting_nodes: List[FNode]=[]):
         """Performs simplification of the given formula."""
-        return self.walk(formula, conflicting_nodes=conflicting_nodes)
+        simple_node = self.walk(formula, simplify=True)
+        if simple_node.is_false():
+            conflicting_nodes += self.cached_conflicting_nodes[formula]
+        return simple_node
 
     def _get_key(self, formula, **kwargs):
         return formula
@@ -82,6 +87,12 @@ class Simplifier(pysmt.walkers.DagWalker):
                                              solver_name=self.validate_simplifications), \
                ("Was: %s \n Obtained: %s\n" % (str(formula), str(res)))
         return res
+    
+    def record_conflict(self, node, conflicting_nodes: List[FNode]):
+        if node in self.cached_conflicting_nodes.keys():
+            self.cached_conflicting_nodes[node] += conflicting_nodes
+        else:
+            self.cached_conflicting_nodes[node] = conflicting_nodes
 
     def walk_and(self, formula, args, **kwargs):
         if len(args) == 2 and args[0] == args[1]:
@@ -92,19 +103,28 @@ class Simplifier(pysmt.walkers.DagWalker):
             if a.is_true():
                 continue
             if a.is_false():
+                if a._original is not None:
+                    # propagate the conflicting nodes
+                    self.record_conflict(formula, self.cached_conflicting_nodes[a._original])
                 return self.manager.FALSE()
             if a.is_and():
                 for s in a.args():
-                    if self.walk_not(self.manager.Not(s), [s]) in new_args:
-                        conflicting_nodes: List[FNode] = {s, self.manager.Not(s)}
-                        kwargs["conflicting_nodes"] += conflicting_nodes
-                        return self.manager.FALSE()
+                    not_s = self.manager.Not(s)
+                    if self.walk_not(not_s, [s]) in new_args:
+                        conflicting_nodes: List[FNode] = {s, not_s}
+                        self.record_conflict(formula, conflicting_nodes)
+                        result = self.manager.FALSE()
+                        result._original = formula
+                        return result
                     new_args.add(s)
             else:
-                if self.walk_not(self.manager.Not(a), [a]) in new_args:
+                not_a = self.manager.Not(a)
+                if self.walk_not(not_a, [a]) in new_args:
                     conflicting_nodes: List[FNode] = {a, self.manager.Not(a)}
-                    kwargs["conflicting_nodes"] += conflicting_nodes
-                    return self.manager.FALSE()
+                    self.record_conflict(formula, conflicting_nodes)
+                    result = self.manager.FALSE()
+                    result._original = formula
+                    return result
                 new_args.add(a)
 
         if len(new_args) == 0:
