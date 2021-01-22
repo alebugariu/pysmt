@@ -63,7 +63,10 @@ class Simplifier(pysmt.walkers.DagWalker):
         """Performs simplification of the given formula."""
         simple_node = self.walk(formula, simplify=True)
         if simple_node.is_false():
-            conflicting_nodes += self.cached_conflicting_nodes[formula]
+            if formula in self.cached_conflicting_nodes.keys():
+                conflicting_nodes += self.cached_conflicting_nodes[formula]
+            else:
+                conflicting_nodes += self.cached_conflicting_nodes[simple_node._original]
         return simple_node
 
     def _get_key(self, formula, **kwargs):
@@ -120,7 +123,7 @@ class Simplifier(pysmt.walkers.DagWalker):
             else:
                 not_a = self.manager.Not(a)
                 if self.walk_not(not_a, [a]) in new_args:
-                    conflicting_nodes: List[FNode] = {a, self.manager.Not(a)}
+                    conflicting_nodes: List[FNode] = {a, not_a}
                     self.record_conflict(formula, conflicting_nodes)
                     result = self.manager.FALSE()
                     result._original = formula
